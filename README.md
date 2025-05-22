@@ -1,9 +1,12 @@
 # COBRA.FRAMEWORK 
-[![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
-[![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-1.8%2B-blue?logo=kotlin)](https://kotlinlang.org/) 
-[![Release](https://img.shields.io/github/v/release/jhu-seclab-cobra/framework?include_prereleases)](https://github.com/jhu-seclab-cobra/framework/releases)
-[![last commit](https://img.shields.io/github/last-commit/jhu-seclab-cobra/framework)](https://github.com/jhu-seclab-cobra/framework/commits/main)
-[![License](https://img.shields.io/github/license/jhu-seclab-cobra/framework)](./LICENSE)
+
+[![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework) 
+![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-1.8%2B-blue?logo=kotlin) 
+[![Release](https://img.shields.io/badge/release-v0.1.0-blue.svg)](https://github.com/jhu-seclab-cobra/framework/releases/tag/v0.1.0) 
+[![last commit](https://img.shields.io/github/last-commit/jhu-seclab-cobra/framework)](https://github.com/jhu-seclab-cobra/framework/commits/main) 
+[![JitPack](https://jitpack.io/v/jhu-seclab-cobra/framework.svg)](https://jitpack.io/#jhu-seclab-cobra/framework) 
+![Repo Size](https://img.shields.io/github/repo-size/jhu-seclab-cobra/framework) 
+[![license](https://img.shields.io/github/license/jhu-seclab-cobra/framework)](./LICENSE)
 
 A core abstraction layer of the COBRA architecture that provides a template implementation of the Interpreter pattern. This framework serves as a foundational design pattern template that can be extended and specialized for various use cases, with AST processing being one of its primary applications. The framework offers a flexible and extensible architecture for implementing the Interpreter pattern, with built-in support for concurrent processing and a robust licensing system.
 
