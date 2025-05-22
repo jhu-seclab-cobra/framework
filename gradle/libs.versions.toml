@@ -1,0 +1,17 @@
+[versions]
+kotlin = "2.0.21"
+kotlinx-coroutines = "1.10.2"
+kover = "0.9.1"
+javaSource = "8"
+javaTarget = "8"
+cobra = "0.1.0"
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+
+[libraries]
+cobra-commons-graph = { module = "com.github.jhu-seclab-cobra.commons-graph:graph", version.ref = "cobra" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+
