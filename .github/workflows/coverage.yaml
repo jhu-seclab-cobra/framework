@@ -1,0 +1,35 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Grant permission
+        run: chmod +x ./gradlew
+
+      - name: Run tests and generate coverage reports
+        run: ./gradlew :graph:test :modules:extension-mapdb:test :modules:extension-jgrapht:test :modules:extension-neo4j:test :graph:koverXmlReport :modules:extension-mapdb:koverXmlReport :modules:extension-jgrapht:koverXmlReport :modules:extension-neo4j:koverXmlReport
+
+      - name: List all coverage reports (debug)
+        run: find . -name report.xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: jhu-seclab-cobra/framework
+          files: ./lib/build/reports/kover/report.xml
