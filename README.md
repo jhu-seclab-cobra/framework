@@ -1,4 +1,5 @@
 # COBRA.FRAMEWORK 
+[![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
 [![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-1.8%2B-blue?logo=kotlin)](https://kotlinlang.org/) 
 [![Release](https://img.shields.io/github/v/release/jhu-seclab-cobra/framework?include_prereleases)](https://github.com/jhu-seclab-cobra/framework/releases)
 [![last commit](https://img.shields.io/github/last-commit/jhu-seclab-cobra/framework)](https://github.com/jhu-seclab-cobra/framework/commits/main)
