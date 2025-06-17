@@ -7,6 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertFailsWith
 
 class AbcWorkshopTest {
 
@@ -20,39 +21,54 @@ class AbcWorkshopTest {
         @TestWorkLicense("worker1")
         val worker1 = TestWorker()
 
-        @TestWorkLicense ("worker2")
+        @TestWorkLicense("worker2")
         val worker2 = TestWorker()
 
-        @TestWorkLicense ("worker3")
+        @TestWorkLicense("worker3")
         val worker3 = TestWorker()
     }
 
     class InheritedWorkshop : TestWorkshop() {
-        @TestWorkLicense ("worker3")
+        @TestWorkLicense("worker3")
         val worker3 = TestWorker()
     }
 
     class PrivateWorkerWorkshop : AbcWorkshop<TestWorker>() {
-        @TestWorkLicense ("worker1")
+        @TestWorkLicense("worker1")
         private val privateWorker = TestWorker()
 
         fun getPrivateWorker() = privateWorker
     }
 
     class NullWorkerWorkshop : AbcWorkshop<TestWorker>() {
-        @TestWorkLicense ("worker1")
+        @TestWorkLicense("worker1")
         val worker1: TestWorker? = null
 
-        @TestWorkLicense ("worker2")
+        @TestWorkLicense("worker2")
         val worker2: TestWorker? = null
     }
 
     class DuplicateTaskIDWorkshop : AbcWorkshop<TestWorker>() {
-        @TestWorkLicense ("worker1")
+        @TestWorkLicense("worker1")
         val worker1 = TestWorker()
 
-        @TestWorkLicense ("worker1")
+        @TestWorkLicense("worker1")
         val worker2 = TestWorker()
+    }
+
+    class MultipleLicenseWorkshop : AbcWorkshop<TestWorker>() {
+        @TestWorkLicense("worker1")
+        val worker1 = TestWorker()
+
+        @TestWorkLicense("worker2")
+        val worker2 = TestWorker()
+    }
+
+    class ProtectedWorkerWorkshop : AbcWorkshop<TestWorker>() {
+        @TestWorkLicense("worker1")
+        protected val worker1 = TestWorker()
+
+        fun accessWorker1() = worker1
     }
 
     @Test
@@ -120,6 +136,49 @@ class AbcWorkshopTest {
         // Should only keep the last registered worker for each task ID
         assertEquals(1, licensedWorkers.size)
         assertTrue(licensedWorkers.values.contains(workshop.worker2))
+    }
+
+    @Test
+    fun `test licensedWorkers with multiple workers`() {
+        val workshop = MultipleLicenseWorkshop()
+        val licensedWorkers = workshop.licensedWorkers()
+        
+        assertEquals(2, licensedWorkers.size)
+        assertTrue(licensedWorkers.values.contains(workshop.worker1))
+        assertTrue(licensedWorkers.values.contains(workshop.worker2))
+    }
+
+    @Test
+    fun `test licensedWorkers with protected workers`() {
+        val workshop = ProtectedWorkerWorkshop()
+        val licensedWorkers = workshop.licensedWorkers()
+        
+        assertEquals(1, licensedWorkers.size)
+        assertTrue(licensedWorkers.values.contains(workshop.accessWorker1()))
+    }
+
+    @Test
+    fun `test licensedWorkers with empty task ID`() {
+        val workshop = object : AbcWorkshop<TestWorker>() {
+            @TestWorkLicense("")
+            val worker = TestWorker()
+        }
+        val licensedWorkers = workshop.licensedWorkers()
+        
+        assertEquals(1, licensedWorkers.size)
+        assertTrue(licensedWorkers.values.contains(workshop.worker))
+    }
+
+    @Test
+    fun `test licensedWorkers with special characters in task ID`() {
+        val workshop = object : AbcWorkshop<TestWorker>() {
+            @TestWorkLicense("worker@123#test")
+            val worker = TestWorker()
+        }
+        val licensedWorkers = workshop.licensedWorkers()
+        
+        assertEquals(1, licensedWorkers.size)
+        assertTrue(licensedWorkers.values.contains(workshop.worker))
     }
 
     @Test

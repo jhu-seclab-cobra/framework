@@ -1,13 +1,12 @@
 package edu.jhu.cobra.framework
 
-import com.sun.corba.se.spi.orbutil.threadpool.Work
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 
 class IWorkerTest {
     
@@ -121,10 +120,29 @@ class IWorkerTest {
     }
 
     @Test
+    fun `test WorkLicense task ID generation with special character props`() {
+        val id = WorkLicense.getTaskID(TestTask::class.java, "@!#")
+        assertEquals("TestTask", id.license)
+        assertEquals(setOf("@!#"), id.props)
+    }
+
+    @Test
+    fun `test WorkLicense isTaskID with empty license`() {
+        val id = ITask.ID("", setOf())
+        assertFalse(WorkLicense.isTaskID(id, TestTask::class.java))
+    }
+
+    @Test
     fun `test worker has the correct licenses`() {
         assertTrue {
             val task1 = WorkLicense.getTaskID(TestTask::class.java)
             WorkLicense.isTaskID(task1, TestTask::class.java)
         }
+    }
+
+    @Test
+    fun `test WorkLicense task ID validation with different class`() {
+        val taskId = ITask.ID("TestTask", setOf("prop1"))
+        assertFalse(WorkLicense.isTaskID(taskId, String::class.java))
     }
 } 
