@@ -1,28 +1,29 @@
 package edu.jhu.cobra.framework
 
 /**
- * Represents a dispatcher responsible for managing and allocating workers based on task identifiers.
- * The dispatcher maps tasks to workers capable of performing those tasks and facilitates dynamic task handling.
+ * Dispatcher for mapping tasks to workers and allocating them dynamically.
  *
- * @param Worker The type parameter representing the worker that extends [IWorker]
+ * Manages registration and lookup of workers ([IWorker]) by task identifier ([ITask.ID]).
+ *
+ * @param Worker The type of worker managed by this dispatcher; must extend [IWorker]. Non-null.
+ * @see [IWorker]
+ * @see [ITask.ID]
  */
 interface IDispatcher<Worker : IWorker<*, *>> {
 
     /**
-     * Retrieves a worker capable of handling a specified task, identified by [forTask].
-     * This method is used to dynamically allocate tasks to appropriate workers based on their identifiers.
+     * Returns a worker capable of handling the specified task.
      *
-     * @param forTask The [ITask.ID] of the task for which a worker is required.
-     * @return The [Worker] capable of executing the specified task, or null if no suitable worker is available.
+     * @param forTask The [ITask.ID] of the task to dispatch. Non-null.
+     * @return The [Worker] registered for the task, or null if none is available.
      */
     fun dispatch(forTask: ITask.ID): Worker?
 
     /**
-     * Registers a worker with the dispatcher, associating it with a specific task identifier.
-     * This method allows the dispatcher to map tasks to their respective workers for future task allocations.
+     * Registers a worker for a specific task identifier.
      *
-     * @param forTask The [ITask.ID] representing the type of tasks the worker will handle.
-     * @param toWorker The [Worker] to be registered and associated with the specified task ID.
+     * @param forTask The [ITask.ID] to associate with the worker. Non-null.
+     * @param toWorker The [Worker] to register. Non-null.
      */
     fun register(forTask: ITask.ID, toWorker: Worker)
 }
