@@ -8,47 +8,36 @@
 ![Repo Size](https://img.shields.io/github/repo-size/jhu-seclab-cobra/framework) 
 [![license](https://img.shields.io/github/license/jhu-seclab-cobra/framework)](./LICENSE)
 
-A core abstraction layer of the COBRA architecture that provides a template implementation of the Interpreter pattern. This framework serves as a foundational design pattern template that can be extended and specialized for various use cases, with AST processing being one of its primary applications. The framework offers a flexible and extensible architecture for implementing the Interpreter pattern, with built-in support for concurrent processing and a robust licensing system.
-
----
+A core abstraction layer of the COBRA architecture that provides a template implementation of the Interpreter pattern. This framework serves as a foundational design pattern template that can be extended and specialized for various use cases, with AST processing being one of its primary applications.
 
 ## Features
 
-- Core abstraction layer for the COBRA architecture
-- Template implementation of the Interpreter pattern
-- Flexible and extensible design pattern framework
-- Type-safe task and result handling
-- Thread-safe and concurrent processing
-- Comprehensive licensing system
-- Extensible handler and dispatcher interfaces
-- Built-in test utilities and annotations
+- **Core Abstraction Layer**
+  - Template implementation of the Interpreter pattern
+  - Extensible handler and dispatcher interfaces
+  - Type-safe task and result handling
+  - Comprehensive licensing mechanism
 
----
+- **Task Processing Framework**
+  - Thread-safe and concurrent processing
+  - Dynamic task distribution system
+  - Flexible handler registration
+  - Built-in error handling
 
-## Module Overview
-
-- **framework** The core abstraction layer that provides a template implementation of the Interpreter pattern. It defines the fundamental interfaces (`IWorker` for handlers, `IDispatcher` for task distribution, `ITask` for tasks), abstract implementations (`AbcWorkshop` for handler management), and the core architecture for implementing the Interpreter pattern. While AST processing is a primary use case, the framework is designed to be adaptable to various interpretation scenarios.
-
-**Design Notes:**
-- The framework provides a template implementation of the Interpreter pattern that can be specialized for different use cases
-- The dispatcher (`IDispatcher`) implements the core routing logic of the Interpreter pattern
-- Handlers (`IWorker`) provide the template for implementing interpretation logic
-- The workshop (`AbcWorkshop`) offers a template for managing the registration and lifecycle of handlers
-- The licensing system provides a template for controlling handler authorization
-- All core abstractions are designed to be extended and specialized for specific use cases
-- The framework serves as a foundation for implementing various interpretation scenarios, with AST processing being one example
-
----
+- **Development Support**
+  - Built-in test utilities and annotations
+  - Comprehensive documentation
+  - Example implementations
+  - Integration guides
 
 ## Requirements
 
-- Java 8 or higher
-
----
+- JavaUser: Java 8 or higher
+- KotlinUser: Kotlin 1.8 or higher
 
 ## Installation
 
-### 1. Add JitPack repository
+### 1. Add JitPack Repository
 
 In your `build.gradle.kts`:
 ```kotlin
@@ -57,57 +46,132 @@ repositories {
 }
 ```
 
-### 2. Add the dependency
+### 2. Add Dependency
 
 ```kotlin
 dependencies {
-    implementation("com.github.jhu-seclab-cobra.framework:framework:VERSION")
+    implementation("com.github.jhu-seclab-cobra:framework:0.1.0")
 }
 ```
 
-Replace `VERSION` with the latest release version.
+## Quick Start
 
----
-
-## Usage
-
-### 1. Basic Handler Implementation
+### 1. Define AST Node Structure
 
 ```kotlin
-class MyHandler : IWorker<MyTask, MyResult> {
-    override suspend fun FlowCollector<MyResult>.work(task: MyTask) {
-        // Implement interpretation logic
-        emit(MyResult(interpret(task)))
+// Simple AST Node interface
+interface AstNode {
+    val nodeType: String
+}
+
+// Basic node implementations
+data class BinaryExpressionNode(val operator: String) : AstNode {
+    override val nodeType: String = "BinaryExpression"
+}
+
+data class LiteralNode(val value: String) : AstNode {
+    override val nodeType: String = "Literal"
+}
+
+data class VariableNode(val name: String) : AstNode {
+    override val nodeType: String = "Variable"
+}
+```
+
+### 2. Define Task and Result Types
+
+```kotlin
+data class AstTask(
+    override val uid: ITask.ID,
+    val node: AstNode
+) : ITask
+
+data class AstResult(val value: String) : IProduct
+```
+
+### 3. Implement Workers and Dispatcher
+
+```kotlin
+// Simple workers using SAM pattern
+val binaryWorker = IWorker<AstTask, AstResult> { task ->
+    emit(AstResult("processed_binary"))
+}
+
+val literalWorker = IWorker<AstTask, AstResult> { task ->
+    emit(AstResult("processed_literal"))
+}
+
+val variableWorker = IWorker<AstTask, AstResult> { task ->
+    emit(AstResult("processed_variable"))
+}
+
+// Simple dispatcher
+class AstDispatcher : IDispatcher<IWorker<AstTask, AstResult>> {
+    private val workers = mutableMapOf<ITask.ID, IWorker<AstTask, AstResult>>()
+    
+    override fun dispatch(forTask: ITask.ID) = workers[forTask]
+    override fun register(forTask: ITask.ID, toWorker: IWorker<AstTask, AstResult>) {
+        workers[forTask] = toWorker
     }
 }
 ```
 
-### 2. Workshop Implementation
+### 4. Create Workshop
 
 ```kotlin
-class MyWorkshop : AbcWorkshop<MyHandler>() {
-    @WorkLicense("handler1")
-    val handler1 = MyHandler()
+class AstWorkshop : AbcWorkshop<IWorker<AstTask, AstResult>>() {
+    @WorkLicense("BinaryExpression")
+    val binaryWorker = binaryWorker
     
-    @WorkLicense("handler2")
-    val handler2 = MyHandler()
+    @WorkLicense("Literal")
+    val literalWorker = literalWorker
+    
+    @WorkLicense("Variable")
+    val variableWorker = variableWorker
 }
 ```
 
-### 3. Task Processing
+### 5. Use the Framework
 
 ```kotlin
-val workshop = MyWorkshop()
-val taskId = ITask.ID("TaskType", setOf("prop1", "prop2"))
-val task = MyTask(taskId)
+// Create task
+val task = AstTask(
+    uid = ITask.ID("BinaryExpression", setOf("math")),
+    node = BinaryExpressionNode("+")
+)
 
-val result = mutableListOf<MyResult>()
-with(workshop.handler1) {
+// Setup framework components
+val workshop = AstWorkshop()
+val dispatcher = AstDispatcher()
+
+// Register workers
+workshop.licensedWorkers().forEach { (taskId, worker) ->
+    dispatcher.register(taskId, worker)
+}
+
+// Process task
+val worker = dispatcher.dispatch(task.uid)!!
+val result = mutableListOf<AstResult>()
+with(worker) {
     flow { work(task) }.collect { result.add(it) }
 }
+
+println("Result: ${result.first().value}")
 ```
 
----
+## Core Components
+
+### Interfaces
+
+- `IWorker<T : ITask, R : IProduct>`: Task processing interface
+- `IDispatcher<W : IWorker<*, *>>`: Task distribution interface
+- `ITask`: Task definition interface
+- `IProduct`: Result marker interface
+
+### Implementations
+
+- `AbcWorkshop<W : IWorker<*, *>>`: Abstract workshop implementation
+- `@WorkLicense`: Handler authorization annotation
 
 ## Testing
 
@@ -116,19 +180,17 @@ Run all tests with:
 ./gradlew test
 ```
 
----
-
 ## License
 
 [GNU General Public License v2.0](./LICENSE)
 
----
-
 ## Contributing
 
-Contributions are welcome! Please open issues or submit pull requests for bug fixes, new features, or improvements.
-
----
+Contributions are welcome! Please open issues or submit pull requests for:
+- Bug fixes
+- New features
+- Documentation improvements
+- Test coverage enhancements
 
 ## Acknowledgements
 
