@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertFailsWith
 import kotlin.test.BeforeTest
+import kotlin.test.assertTrue
 
 class IDispatcherTest {
     
@@ -74,5 +75,43 @@ class IDispatcherTest {
         val taskId = ITask.ID("Test@Task#123", setOf("prop1"))
         dispatcher.register(taskId, worker)
         assertEquals(worker, dispatcher.dispatch(taskId))
+    }
+
+    @Test
+    fun `test register with same worker for different tasks`() {
+        val taskId1 = ITask.ID("Task1", setOf("prop1"))
+        val taskId2 = ITask.ID("Task2", setOf("prop2"))
+        
+        dispatcher.register(taskId1, worker)
+        dispatcher.register(taskId2, worker)
+        
+        assertEquals(worker, dispatcher.dispatch(taskId1))
+        assertEquals(worker, dispatcher.dispatch(taskId2))
+    }
+
+    @Test
+    fun `test register with identical task IDs`() {
+        val taskId1 = ITask.ID("TestTask", setOf("prop1"))
+        val taskId2 = ITask.ID("TestTask", setOf("prop1"))
+        val worker2 = TestWorker()
+        
+        dispatcher.register(taskId1, worker)
+        dispatcher.register(taskId2, worker2)
+        
+        assertEquals(worker2, dispatcher.dispatch(taskId1))
+        assertEquals(worker2, dispatcher.dispatch(taskId2))
+    }
+
+    @Test
+    fun `test register with case sensitive task IDs`() {
+        val taskId1 = ITask.ID("TestTask", setOf("prop1"))
+        val taskId2 = ITask.ID("testtask", setOf("prop1"))
+        val worker2 = TestWorker()
+        
+        dispatcher.register(taskId1, worker)
+        dispatcher.register(taskId2, worker2)
+        
+        assertEquals(worker, dispatcher.dispatch(taskId1))
+        assertEquals(worker2, dispatcher.dispatch(taskId2))
     }
 }
