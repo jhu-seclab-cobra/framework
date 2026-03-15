@@ -8,8 +8,7 @@ plugins {
 group = "edu.jhu.cobra"
 version = "0.1.0"
 
-val sourceJavaVersion = JavaVersion.toVersion(libs.versions.javaSource.get())
-val targetJavaVersion = JavaVersion.toVersion(libs.versions.javaTarget.get())
+val jvmVersion = libs.versions.jvm.get().toInt()
 
 repositories {
     mavenCentral()
@@ -24,13 +23,13 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain { languageVersion.set(JavaLanguageVersion.of(sourceJavaVersion.majorVersion)) }
-    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(targetJavaVersion.toString()) }
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(jvmVersion))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
 }
 
 java {
-    sourceCompatibility = sourceJavaVersion
-    targetCompatibility = targetJavaVersion
     withSourcesJar()
     withJavadocJar()
 }
@@ -38,4 +37,3 @@ java {
 publishing {
     publications { create<MavenPublication>("maven") { from(components["java"]) } }
 }
-

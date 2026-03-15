@@ -15,6 +15,8 @@ out/
 # === IDE/Editor Files ===
 .idea/
 .vscode/
+.cursor/
+.claude/
 *.iml
 *.ipr
 *.iws
@@ -53,3 +55,4 @@ kover/
 
 # === Ignore any other unwanted files ===
 # (add more patterns as needed)
+.*
