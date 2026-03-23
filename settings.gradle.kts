@@ -5,7 +5,9 @@ plugins {
 rootProject.name = "framework"
 include("framework")
 
-if (file("extern/commons-graph").exists()) {
+// Only include transitive dependencies when building standalone (not as a composite build).
+// When included by a parent project, the parent is responsible for providing commons-value and commons-graph.
+if (gradle.parent == null && file("extern/commons-graph").exists()) {
     includeBuild("extern/commons-graph/extern/commons-value") {
         name = "commons-value"
         dependencySubstitution {
