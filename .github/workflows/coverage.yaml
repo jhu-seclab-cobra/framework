@@ -14,6 +14,12 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Initialize commons-value submodule (skipped by update=none in .gitmodules)
+        run: |
+          git -C extern/commons-graph config submodule.extern/commons-value.update checkout
+          rm -rf extern/commons-graph/extern/commons-value
+          git -C extern/commons-graph submodule update --init extern/commons-value
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:

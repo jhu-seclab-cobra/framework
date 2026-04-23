@@ -4,9 +4,11 @@ plugins {
 
 rootProject.name = "framework"
 
-// Include transitive dependencies from submodules.
-// commons-graph depends on commons-value; both are exposed via api() to consumers.
-if (file("extern/commons-graph").exists()) {
+// Include transitive dependencies from submodules when initialized.
+// commons-graph depends on commons-value; both exposed via api() to consumers.
+if (file("extern/commons-graph/settings.gradle.kts").exists()
+    && file("extern/commons-graph/extern/commons-value/settings.gradle.kts").exists()
+) {
     includeBuild("extern/commons-graph/extern/commons-value") {
         name = "commons-value"
         dependencySubstitution {
