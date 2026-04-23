@@ -1,0 +1,19 @@
+# COBRA Framework
+
+> Template implementation of the Interpreter pattern for task dispatching and licensed worker management.
+
+Kotlin library providing `IWorker`, `IDispatcher`, `AbcWorkshop`, and `WorkLicense` abstractions. Workers perform tasks and emit products via Kotlin Flow. Workshops group workers and expose them through annotation-based licensing. Dispatchers route tasks to registered workers by `ITask.ID`.
+
+## Instructions for Agents
+
+- Subclass `AbcWorkshop<W>` to group related workers. Annotate worker properties with a `@WorkLicense`-annotated annotation.
+- Call `licensedWorkers()` on a workshop instance to get a `Map<ITask.ID, W>` of all annotated workers.
+- Implement `IDispatcher<W>` to manage worker registration and lookup by `ITask.ID`.
+- Implement `IWorker<T, R>` with `suspend fun FlowCollector<R>.work(task: T)` to produce results via Flow emission.
+- Use `WorkLicense.getTaskID(annotation)` to extract `ITask.ID` from a `@WorkLicense`-annotated annotation instance.
+- Never construct `ITask.ID` directly. Use `WorkLicense.getTaskID()` companion functions.
+- `@WorkLicense` is a meta-annotation. Apply it to custom annotation classes, not to properties directly.
+
+## Core API
+
+- [Core](llms/core.md): `IWorker`, `ITask`, `IProduct`, `IDispatcher`, `AbcWorkshop`, `WorkLicense`.
