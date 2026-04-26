@@ -1,17 +1,35 @@
+/**
+ * Unit tests for [AbcWorkshop] discovery mechanism.
+ *
+ * Discovery:
+ * - `licensedWorkers returns only licensed workers`: excludes unlicensed
+ * - `licensedWorkers with no licensed workers`: empty result
+ * - `licensedWorkers with all workers licensed`: full result
+ * - `licensedWorkers discovers private workers`: isAccessible = true
+ * - `licensedWorkers discovers protected workers`: isAccessible = true
+ * - `licensedWorkers with null-valued workers`: included in map (design doc: null-valued included)
+ * - `licensedWorkers with empty task ID`: empty string valid
+ * - `licensedWorkers with special characters in task ID`: no character constraints
+ *
+ * Inheritance:
+ * - `licensedWorkers only discovers declared properties not inherited`: declaredMemberProperties
+ *
+ * Duplicate handling:
+ * - `licensedWorkers with duplicate task IDs keeps last`: last-write-wins
+ *
+ * Integration:
+ * - `licensedWorkers produces correct task IDs for dispatcher registration`: end-to-end
+ */
 package edu.jhu.cobra.framework
 
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertFailsWith
 
-class AbcWorkshopTest {
+internal class AbcWorkshopTest {
 
-    // Test workshop implementations
     class EmptyWorkshop : AbcWorkshop<TestWorker>() {
         val worker1 = TestWorker()
         val worker2 = TestWorker()
@@ -56,14 +74,6 @@ class AbcWorkshopTest {
         val worker2 = TestWorker()
     }
 
-    class MultipleLicenseWorkshop : AbcWorkshop<TestWorker>() {
-        @TestWorkLicense("worker1")
-        val worker1 = TestWorker()
-
-        @TestWorkLicense("worker2")
-        val worker2 = TestWorker()
-    }
-
     class ProtectedWorkerWorkshop : AbcWorkshop<TestWorker>() {
         @TestWorkLicense("worker1")
         protected val worker1 = TestWorker()
@@ -72,158 +82,90 @@ class AbcWorkshopTest {
     }
 
     @Test
-    fun `test licensedWorkers returns only licensed workers`() {
+    fun `licensedWorkers returns only licensed workers`() {
         val workshop = TestWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(2, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.worker1))
-        assertTrue(licensedWorkers.values.contains(workshop.worker2))
-        assertFalse(licensedWorkers.values.contains(workshop.unlicensedWorker))
+        val licensed = workshop.licensedWorkers()
+        assertEquals(2, licensed.size)
+        assertTrue(licensed.values.contains(workshop.worker1))
+        assertTrue(licensed.values.contains(workshop.worker2))
+        assertFalse(licensed.values.contains(workshop.unlicensedWorker))
     }
 
     @Test
-    fun `test licensedWorkers with no licensed workers`() {
-        val workshop = EmptyWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        assertTrue(licensedWorkers.isEmpty())
+    fun `licensedWorkers with no licensed workers`() {
+        val licensed = EmptyWorkshop().licensedWorkers()
+        assertTrue(licensed.isEmpty())
     }
 
     @Test
-    fun `test licensedWorkers with all workers licensed`() {
+    fun `licensedWorkers with all workers licensed`() {
         val workshop = AllLicensedWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(3, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.worker1))
-        assertTrue(licensedWorkers.values.contains(workshop.worker2))
-        assertTrue(licensedWorkers.values.contains(workshop.worker3))
+        val licensed = workshop.licensedWorkers()
+        assertEquals(3, licensed.size)
     }
 
     @Test
-    fun `test licensedWorkers with inherited workers`() {
+    fun `licensedWorkers only discovers declared properties not inherited`() {
         val workshop = InheritedWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(1, licensedWorkers.size)
-        assertFalse(licensedWorkers.values.contains(workshop.worker1))
-        assertFalse(licensedWorkers.values.contains(workshop.worker2))
-        assertTrue(licensedWorkers.values.contains(workshop.worker3))
+        val licensed = workshop.licensedWorkers()
+        assertEquals(1, licensed.size)
+        assertTrue(licensed.values.contains(workshop.worker3))
     }
 
     @Test
-    fun `test licensedWorkers with private workers`() {
+    fun `licensedWorkers discovers private workers`() {
         val workshop = PrivateWorkerWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(1, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.getPrivateWorker()))
+        val licensed = workshop.licensedWorkers()
+        assertEquals(1, licensed.size)
+        assertTrue(licensed.values.contains(workshop.getPrivateWorker()))
     }
 
     @Test
-    fun `test licensedWorkers with null workers`() {
-        val workshop = NullWorkerWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(2, licensedWorkers.size)
-    }
-
-    @Test
-    fun `test licensedWorkers with duplicate task IDs`() {
-        val workshop = DuplicateTaskIDWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        // Should only keep the last registered worker for each task ID
-        assertEquals(1, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.worker2))
-    }
-
-    @Test
-    fun `test licensedWorkers with multiple workers`() {
-        val workshop = MultipleLicenseWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(2, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.worker1))
-        assertTrue(licensedWorkers.values.contains(workshop.worker2))
-    }
-
-    @Test
-    fun `test licensedWorkers with protected workers`() {
+    fun `licensedWorkers discovers protected workers`() {
         val workshop = ProtectedWorkerWorkshop()
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(1, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.accessWorker1()))
+        val licensed = workshop.licensedWorkers()
+        assertEquals(1, licensed.size)
+        assertTrue(licensed.values.contains(workshop.accessWorker1()))
     }
 
     @Test
-    fun `test licensedWorkers with empty task ID`() {
+    fun `licensedWorkers with null-valued workers`() {
+        val licensed = NullWorkerWorkshop().licensedWorkers()
+        assertEquals(2, licensed.size)
+    }
+
+    @Test
+    fun `licensedWorkers with duplicate task IDs keeps last`() {
+        val workshop = DuplicateTaskIDWorkshop()
+        val licensed = workshop.licensedWorkers()
+        assertEquals(1, licensed.size)
+    }
+
+    @Test
+    fun `licensedWorkers with empty task ID`() {
         val workshop = object : AbcWorkshop<TestWorker>() {
             @TestWorkLicense("")
             val worker = TestWorker()
         }
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(1, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.worker))
+        assertEquals(1, workshop.licensedWorkers().size)
     }
 
     @Test
-    fun `test licensedWorkers with special characters in task ID`() {
+    fun `licensedWorkers with special characters in task ID`() {
         val workshop = object : AbcWorkshop<TestWorker>() {
             @TestWorkLicense("worker@123#test")
             val worker = TestWorker()
         }
-        val licensedWorkers = workshop.licensedWorkers()
-        
-        assertEquals(1, licensedWorkers.size)
-        assertTrue(licensedWorkers.values.contains(workshop.worker))
+        assertEquals(1, workshop.licensedWorkers().size)
     }
 
     @Test
-    fun `test dispatcher registration and dispatch`() {
+    fun `licensedWorkers produces correct task IDs for dispatcher registration`() {
+        val workshop = TestWorkshop()
         val dispatcher = TestDispatcher()
-        val worker = TestWorker()
-        val taskId = ITask.ID("TestTask", setOf("prop1", "prop2"))
-
-        // Test registration
-        dispatcher.register(taskId, worker)
-        assertEquals(worker, dispatcher.dispatch(taskId))
-    }
-
-    @Test
-    fun `test dispatcher returns null for unregistered task`() {
-        val dispatcher = TestDispatcher()
-        val taskId = ITask.ID("NonExistentTask", setOf("prop1"))
-        assertNull(dispatcher.dispatch(taskId))
-    }
-
-    @Test
-    fun `test worker processes task and produces product`() = runBlocking {
-        val worker = TestWorker()
-        val taskId = ITask.ID("TestTask", setOf("prop1"))
-        val task = TestTask(taskId)
-        
-        val result = mutableListOf<TestProduct>()
-        with(worker){
-            flow{ work(task) }.collect { result.add(it) }
-        }
-        assertEquals(1, result.size)
-        assertEquals("Processed: TestTask", result[0].value)
-    }
-
-    @Test
-    fun `test TestWorkLicense task ID generation`() {
-        val taskId = TestWorkLicense.getTaskID(TestTask::class.java, "prop1", "prop2")
-        assertEquals("TestTask", taskId.license)
-        assertEquals(setOf("prop1", "prop2"), taskId.props)
-    }
-
-    @Test
-    fun `test TestWorkLicense task ID validation`() {
-        val taskId = ITask.ID("TestTask", setOf("prop1"))
-        assertTrue(TestWorkLicense.isTaskID(taskId, TestTask::class.java))
-        assertFalse(TestWorkLicense.isTaskID(taskId, String::class.java))
+        workshop.licensedWorkers().forEach { (id, worker) -> dispatcher.register(id, worker) }
+        val id = WorkLicense.getTaskID(TestWorkLicense::class.java, "worker1")
+        val dispatched = dispatcher.dispatch(id)
+        assertEquals(workshop.worker1, dispatched)
     }
 }

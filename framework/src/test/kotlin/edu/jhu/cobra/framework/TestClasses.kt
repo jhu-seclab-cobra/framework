@@ -1,32 +1,16 @@
 package edu.jhu.cobra.framework
 
-import kotlinx.coroutines.flow.FlowCollector
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.jvm.isAccessible
-
-
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-@WorkLicense annotation class TestWorkLicense(val name: String){
-    companion object {
-        fun getTaskID(cls: Class<*>, vararg props: String): ITask.ID =
-            ITask.ID(cls.simpleName, props.toSet())
+@WorkLicense
+annotation class TestWorkLicense(val name: String)
 
-        fun isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean =
-            taskID.license == forLicense.simpleName
-    }
-}
-
-// Test implementations
-data class TestProduct(val value: String) : IProduct
+data class TestResult(val value: String)
 data class TestTask(override val uid: ITask.ID) : ITask
 
-class TestWorker : IWorker<TestTask, TestProduct> {
-    override suspend fun FlowCollector<TestProduct>.work(task: TestTask) {
-        emit(TestProduct("Processed: ${task.uid.license}"))
-    }
+class TestWorker : IWorker<TestTask, TestResult> {
+    override fun work(task: TestTask): TestResult =
+        TestResult("Processed: ${task.uid.license}")
 }
 
 class TestDispatcher : IDispatcher<TestWorker> {
@@ -38,7 +22,6 @@ class TestDispatcher : IDispatcher<TestWorker> {
     }
 }
 
-// Test implementation of AbcWorkshop
 open class TestWorkshop : AbcWorkshop<TestWorker>() {
     @TestWorkLicense("worker1")
     val worker1 = TestWorker()
