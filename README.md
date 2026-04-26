@@ -2,7 +2,7 @@
 
 > Named for the COBRA static analysis platform — the foundational dispatch layer that coordinates analysis workers.
 
-Annotation-driven task dispatching and licensed worker management for Kotlin coroutine-based interpreters.
+Annotation-driven task dispatching and licensed worker management for Kotlin analysis and interpretation systems.
 
 [![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
 ![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-1.8%2B-blue?logo=kotlin)
@@ -33,7 +33,7 @@ annotation class NodeLicense(val type: String)
 // 2. Group workers in a workshop
 class ExprWorkshop : AbcWorkshop<IWorker<ExprTask, ExprResult>>() {
     @NodeLicense("BinaryExpr")
-    val binary = IWorker<ExprTask, ExprResult> { (_, node) -> emit(eval(node)) }
+    val binary = IWorker<ExprTask, ExprResult> { task -> eval(task.node) }
 }
 
 // 3. Discover and dispatch
@@ -44,7 +44,7 @@ val worker = dispatcher.dispatch(task.uid)
 
 ## API
 
-**`IWorker<T : ITask, R : IProduct>`** — Performs a task, emits products via `FlowCollector<R>.work(task)`.
+**`IWorker<T : ITask, R>`** — Performs a task, returns result via `fun work(task: T): R`. Synchronous `fun interface`.
 
 **`IDispatcher<W>`** — `dispatch(forTask: ITask.ID): W?` and `register(forTask: ITask.ID, toWorker: W)`.
 
@@ -62,6 +62,20 @@ val worker = dispatcher.dispatch(task.uid)
 ## For Agents
 
 Agent-consumable documentation index at `docs/llms.txt` ([llmstxt.org](https://llmstxt.org) format).
+
+## Citation
+
+If you use this repository in your research, please cite our paper:
+
+```bibtex
+@inproceedings{xu2026cobra,
+  title     = {CoBrA: Context-, Branch-sensitive Static Analysis for Detecting Taint-style Vulnerabilities in PHP Web Applications},
+  author    = {Xu, Yichao and Kang, Mingqing and Thimmaiah, Neil and Gjomemo, Rigel and Venkatakrishnan, V. N. and Cao, Yinzhi},
+  booktitle = {Proceedings of the 48th IEEE/ACM International Conference on Software Engineering (ICSE)},
+  year      = {2026},
+  address   = {Rio de Janeiro, Brazil}
+}
+```
 
 ## License
 
