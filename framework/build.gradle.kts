@@ -18,7 +18,6 @@ repositories {
 dependencies {
     api(libs.cobra.commons.graph)
     implementation(libs.kotlin.reflect)
-    implementation(libs.kotlinx.coroutines.core)
     testImplementation(kotlin("test"))
 }
 
