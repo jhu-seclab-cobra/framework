@@ -17,8 +17,18 @@ class TestDispatcher : IDispatcher<TestWorker> {
     private val workers = mutableMapOf<ITask.ID, TestWorker>()
 
     override fun dispatch(forTask: ITask.ID): TestWorker? = workers[forTask]
-    override fun register(forTask: ITask.ID, toWorker: TestWorker) {
-        workers[forTask] = toWorker
+    override fun register(forTask: ITask.ID, toWorker: TestWorker, mode: RegisterMode) {
+        when (mode) {
+            RegisterMode.REPLACE -> workers[forTask] = toWorker
+            RegisterMode.ATTACH -> {
+                val existing = workers[forTask]
+                if (existing != null) {
+                    workers[forTask] = IWorker { task -> existing.work(task); toWorker.work(task) }
+                } else {
+                    workers[forTask] = toWorker
+                }
+            }
+        }
     }
 }
 
