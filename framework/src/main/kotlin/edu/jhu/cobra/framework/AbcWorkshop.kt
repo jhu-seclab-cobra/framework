@@ -3,6 +3,7 @@ package edu.jhu.cobra.framework
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 
 /**
@@ -30,4 +31,28 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
         .filter { (_, licenses) -> licenses.isNotEmpty() }
         .map { (prop, licenses) -> prop.apply { isAccessible = true }.get(this) to licenses }
         .flatMap { (prop, licenses) -> licenses.map { license -> WorkLicense.getTaskID(license) to prop } }.toMap()
+
+    /**
+     * Registers all licensed workers from this workshop into the given dispatcher.
+     * Reads [RegisterMode] from each annotation's `mode` property (defaults to ATTACH if absent).
+     */
+    fun registerTo(dispatcher: IDispatcher<W>) {
+        this::class.declaredMemberProperties.asSequence()
+            .filterIsInstance<KProperty1<AbcWorkshop<W>, W>>()
+            .map { p -> p to p.annotations.filter { it.annotationClass.hasAnnotation<WorkLicense>() } }
+            .filter { (_, licenses) -> licenses.isNotEmpty() }
+            .map { (prop, licenses) -> prop.apply { isAccessible = true }.get(this) to licenses }
+            .flatMap { (worker, licenses) -> licenses.map { license -> Triple(WorkLicense.getTaskID(license), worker, extractMode(license)) } }
+            .forEach { (taskId, worker, mode) -> dispatcher.register(taskId, worker, mode) }
+    }
+
+    private fun extractMode(annotation: Annotation): RegisterMode {
+        val modeProperty = annotation.annotationClass.primaryConstructor?.parameters
+            ?.firstOrNull { it.name == "mode" }
+            ?: return RegisterMode.ATTACH
+        val memberProp = annotation.annotationClass.declaredMemberProperties
+            .firstOrNull { it.name == "mode" }
+            ?: return RegisterMode.ATTACH
+        return (memberProp.call(annotation) as? RegisterMode) ?: RegisterMode.ATTACH
+    }
 }
