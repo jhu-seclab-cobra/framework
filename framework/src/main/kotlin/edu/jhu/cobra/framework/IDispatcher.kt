@@ -35,5 +35,5 @@ interface IDispatcher<Worker : IWorker<*, *>> {
      * @param toWorker The [Worker] to register.
      * @param mode [RegisterMode.REPLACE] overwrites existing; [RegisterMode.ATTACH] chains with existing.
      */
-    fun register(forTask: ITask.ID, toWorker: Worker, mode: RegisterMode = RegisterMode.REPLACE)
+    fun register(forTask: ITask.ID, toWorker: Worker, mode: RegisterMode = RegisterMode.ATTACH)
 }
