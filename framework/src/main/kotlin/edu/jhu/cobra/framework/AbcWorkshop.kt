@@ -47,7 +47,7 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
     }
 
     private fun extractMode(annotation: Annotation): RegisterMode {
-        val modeProperty = annotation.annotationClass.primaryConstructor?.parameters
+        annotation.annotationClass.primaryConstructor?.parameters
             ?.firstOrNull { it.name == "mode" }
             ?: return RegisterMode.ATTACH
         val memberProp = annotation.annotationClass.declaredMemberProperties
