@@ -58,6 +58,10 @@ annotation class WorkLicense {
 /**
  * Extracts a task ID from a [WorkLicense]-annotated annotation instance.
  *
+ * [RegisterMode]-typed properties are registration metadata, not task
+ * discriminants; they are excluded so the ID matches one built from the
+ * task's own properties alone.
+ *
  * @param annotation The annotation instance.
  * @return The generated [ITask.ID].
  */
@@ -65,7 +69,9 @@ fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
     val annoCls = annotation.annotationClass
     val annotatedProps = annoCls.primaryConstructor!!.parameters.map { it.name }
         .map { tar -> annoCls.declaredMemberProperties.first { it.name == tar } }
-    val innerStr = annotatedProps.map { it.call(annotation).toString() }
+    val innerStr = annotatedProps
+        .filterNot { it.returnType.classifier == RegisterMode::class }
+        .map { it.call(annotation).toString() }
     return WorkLicense.getTaskID(annotation.annotationClass.java, innerStr)
 }
 

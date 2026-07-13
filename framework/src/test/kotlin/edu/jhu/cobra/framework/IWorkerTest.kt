@@ -17,6 +17,7 @@
  * - `getTaskID from class with empty props`: zero-arg construction
  * - `getTaskID from class with props`: multi-arg construction
  * - `getTaskID from annotation instance extracts parameters`: reflection-based extraction
+ * - `getTaskID from annotation excludes RegisterMode properties`: mode is registration metadata, not a discriminant
  *
  * WorkLicense.isTaskID:
  * - `isTaskID matches same class`: positive match
@@ -111,6 +112,14 @@ internal class IWorkerTest {
         val taskId = workers.keys.first { "worker1" in it.props }
         assertEquals("TestWorkLicense", taskId.license)
         assertEquals(setOf("worker1"), taskId.props)
+    }
+
+    @Test
+    fun `getTaskID from annotation excludes RegisterMode properties`() {
+        val workers = TestModedWorkshop().licensedWorkers()
+        val taskId = workers.keys.single()
+        assertEquals("TestModedLicense", taskId.license)
+        assertEquals(setOf("modedWorker"), taskId.props)
     }
 
     @Test
