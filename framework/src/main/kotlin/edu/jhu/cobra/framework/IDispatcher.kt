@@ -29,7 +29,7 @@ interface IDispatcher<Worker : IWorker<*, *>> {
 
     /**
      * Registers a worker for a specific task identifier.
-     * Default mode is [RegisterMode.REPLACE].
+     * Default mode is [RegisterMode.ATTACH].
      *
      * @param forTask The [ITask.ID] to associate with the worker.
      * @param toWorker The [Worker] to register.
