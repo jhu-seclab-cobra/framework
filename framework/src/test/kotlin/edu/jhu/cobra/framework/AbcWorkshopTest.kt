@@ -162,7 +162,7 @@ internal class AbcWorkshopTest {
     @Test
     fun `licensedWorkers produces correct task IDs for dispatcher registration`() {
         val workshop = TestWorkshop()
-        val dispatcher = TestDispatcher()
+        val dispatcher = AbcDispatcher<TestWorker>()
         workshop.licensedWorkers().forEach { (id, worker) -> dispatcher.register(id, worker) }
         val id = WorkLicense.getTaskID(TestWorkLicense::class.java, "worker1")
         val dispatched = dispatcher.dispatch(id)

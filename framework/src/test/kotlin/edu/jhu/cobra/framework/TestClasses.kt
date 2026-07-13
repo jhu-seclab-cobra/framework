@@ -13,25 +13,6 @@ class TestWorker : IWorker<TestTask, TestResult> {
         TestResult("Processed: ${task.uid.license}")
 }
 
-class TestDispatcher : IDispatcher<TestWorker> {
-    private val workers = mutableMapOf<ITask.ID, TestWorker>()
-
-    override fun dispatch(forTask: ITask.ID): TestWorker? = workers[forTask]
-    override fun register(forTask: ITask.ID, toWorker: TestWorker, mode: RegisterMode) {
-        when (mode) {
-            RegisterMode.REPLACE -> workers[forTask] = toWorker
-            RegisterMode.ATTACH -> {
-                val existing = workers[forTask]
-                if (existing != null) {
-                    workers[forTask] = IWorker { task -> existing.work(task); toWorker.work(task) }
-                } else {
-                    workers[forTask] = toWorker
-                }
-            }
-        }
-    }
-}
-
 open class TestWorkshop : AbcWorkshop<TestWorker>() {
     @TestWorkLicense("worker1")
     val worker1 = TestWorker()

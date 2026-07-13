@@ -1,10 +1,11 @@
 /**
- * Unit tests for [IDispatcher].
+ * Unit tests for [IDispatcher] via its default implementation [AbcDispatcher].
  *
  * Registration:
  * - `register and dispatch single worker`: basic registration
  * - `register and dispatch multiple workers`: multi-worker registry
- * - `register overwrites existing worker`: last-write-wins
+ * - `register with REPLACE overwrites existing worker`: explicit last-write-wins
+ * - `register with ATTACH chains workers in order`: default mode chains both workers
  * - `register same worker for different tasks`: one worker, multiple IDs
  * - `register with empty task ID`: boundary
  * - `register with empty properties`: boundary
@@ -12,7 +13,7 @@
  *
  * Dispatch:
  * - `dispatch returns null for unregistered task`: missing registration
- * - `dispatch with identical task IDs`: structural equality
+ * - `dispatch with identical task IDs replaces on REPLACE`: structural equality
  * - `dispatch is case sensitive`: case sensitivity
  */
 package edu.jhu.cobra.framework
@@ -24,12 +25,12 @@ import kotlin.test.BeforeTest
 
 internal class IDispatcherTest {
 
-    private lateinit var dispatcher: TestDispatcher
+    private lateinit var dispatcher: AbcDispatcher<TestWorker>
     private lateinit var worker: TestWorker
 
     @BeforeTest
     fun setUp() {
-        dispatcher = TestDispatcher()
+        dispatcher = AbcDispatcher()
         worker = TestWorker()
     }
 
@@ -57,12 +58,23 @@ internal class IDispatcherTest {
     }
 
     @Test
-    fun `register overwrites existing worker`() {
+    fun `register with REPLACE overwrites existing worker`() {
         val id = ITask.ID("TestTask", setOf("prop1"))
         val worker2 = TestWorker()
         dispatcher.register(id, worker)
-        dispatcher.register(id, worker2)
+        dispatcher.register(id, worker2, RegisterMode.REPLACE)
         assertEquals(worker2, dispatcher.dispatch(id))
+    }
+
+    @Test
+    fun `register with ATTACH chains workers in order`() {
+        val calls = mutableListOf<String>()
+        val chaining = AbcDispatcher<IWorker<TestTask, Unit>>()
+        val id = ITask.ID("TestTask", setOf("prop1"))
+        chaining.register(id, { calls.add("first") })
+        chaining.register(id, { calls.add("second") })
+        chaining.dispatch(id)!!.work(TestTask(id))
+        assertEquals(listOf("first", "second"), calls)
     }
 
     @Test
@@ -97,12 +109,12 @@ internal class IDispatcherTest {
     }
 
     @Test
-    fun `dispatch with identical task IDs`() {
+    fun `dispatch with identical task IDs replaces on REPLACE`() {
         val id1 = ITask.ID("TestTask", setOf("prop1"))
         val id2 = ITask.ID("TestTask", setOf("prop1"))
         val worker2 = TestWorker()
         dispatcher.register(id1, worker)
-        dispatcher.register(id2, worker2)
+        dispatcher.register(id2, worker2, RegisterMode.REPLACE)
         assertEquals(worker2, dispatcher.dispatch(id1))
     }
 
