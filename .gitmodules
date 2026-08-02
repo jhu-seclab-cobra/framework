@@ -1,3 +1,0 @@
-[submodule "extern/commons-graph"]
-	path = extern/commons-graph
-	url = https://github.com/jhu-seclab-cobra/commons-graph.git
