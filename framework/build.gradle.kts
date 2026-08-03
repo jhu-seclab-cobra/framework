@@ -24,7 +24,6 @@ dependencies {
 kotlin {
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(jvmVersion))
-        vendor.set(JvmVendorSpec.ADOPTIUM)
     }
 }
 
