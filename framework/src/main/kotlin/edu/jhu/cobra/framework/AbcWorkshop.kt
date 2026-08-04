@@ -5,7 +5,6 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 
 /**
@@ -33,7 +32,8 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
 
     /**
      * Registers all licensed workers from this workshop into the given dispatcher.
-     * Reads [RegisterMode] from each annotation's `mode` property (defaults to ATTACH if absent).
+     * Reads [RegisterMode] from each annotation's [RegisterMode]-typed property, matching the
+     * property [WorkLicense.getTaskID] excludes; ATTACH when the annotation declares none.
      */
     public fun registerTo(dispatcher: IDispatcher<W>) {
         licensedProperties()
@@ -62,14 +62,12 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
     }
 
     private fun extractMode(annotation: Annotation): RegisterMode {
-        annotation.annotationClass.primaryConstructor
-            ?.parameters
-            ?.firstOrNull { it.name == "mode" }
-            ?: return RegisterMode.ATTACH
-        val memberProp =
-            annotation.annotationClass.declaredMemberProperties
-                .firstOrNull { it.name == "mode" }
+        val annoCls = annotation.annotationClass
+        val modeProp =
+            annoCls.declaredMemberProperties
+                .firstOrNull { it.returnType.classifier == RegisterMode::class }
                 ?: return RegisterMode.ATTACH
-        return (memberProp.call(annotation) as? RegisterMode) ?: RegisterMode.ATTACH
+        return modeProp.call(annotation) as? RegisterMode
+            ?: error("annotation ${annoCls.qualifiedName} property ${modeProp.name} holds a non-RegisterMode value")
     }
 }

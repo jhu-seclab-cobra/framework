@@ -20,6 +20,11 @@
  *
  * Integration:
  * - `licensedWorkers produces correct task IDs for dispatcher registration`: end-to-end
+ *
+ * Registration modes:
+ * - `registerTo respects REPLACE mode from mode-named property`: re-registration overwrites, not chains
+ * - `registerTo respects REPLACE mode from RegisterMode-typed property with another name`: mode
+ *   selection by RegisterMode type, consistent with getTaskID exclusion
  */
 package edu.jhu.cobra.framework
 
@@ -174,6 +179,31 @@ internal class AbcWorkshopTest {
                 val worker = TestWorker()
             }
         assertEquals(1, workshop.licensedWorkers().size)
+    }
+
+    class RenamedModeWorkshop : AbcWorkshop<TestWorker>() {
+        @TestRenamedModeLicense("renamed", priority = RegisterMode.REPLACE)
+        val worker = TestWorker()
+    }
+
+    @Test
+    fun `registerTo respects REPLACE mode from mode-named property`() {
+        val workshop = TestModedWorkshop()
+        val dispatcher = AbcDispatcher<TestWorker>()
+        workshop.registerTo(dispatcher)
+        workshop.registerTo(dispatcher)
+        val id = WorkLicense.getTaskID(TestModedLicense::class.java, "modedWorker")
+        assertEquals(workshop.modedWorker, dispatcher.dispatch(id))
+    }
+
+    @Test
+    fun `registerTo respects REPLACE mode from RegisterMode-typed property with another name`() {
+        val workshop = RenamedModeWorkshop()
+        val dispatcher = AbcDispatcher<TestWorker>()
+        workshop.registerTo(dispatcher)
+        workshop.registerTo(dispatcher)
+        val id = WorkLicense.getTaskID(TestRenamedModeLicense::class.java, "renamed")
+        assertEquals(workshop.worker, dispatcher.dispatch(id))
     }
 
     @Test

@@ -15,6 +15,14 @@ annotation class TestModedLicense(
     val mode: RegisterMode = RegisterMode.ATTACH,
 )
 
+@Target(AnnotationTarget.PROPERTY, AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+@WorkLicense
+annotation class TestRenamedModeLicense(
+    val name: String,
+    val priority: RegisterMode = RegisterMode.ATTACH,
+)
+
 data class TestResult(
     val value: String,
 )
