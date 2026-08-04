@@ -25,12 +25,10 @@ package edu.jhu.cobra.framework
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 internal class AbcWorkshopTest {
-
     class EmptyWorkshop : AbcWorkshop<TestWorker>() {
         val worker1 = TestWorker()
         val worker2 = TestWorker()
@@ -75,7 +73,7 @@ internal class AbcWorkshopTest {
         val worker2 = TestWorker()
     }
 
-    class ProtectedWorkerWorkshop : AbcWorkshop<TestWorker>() {
+    open class ProtectedWorkerWorkshop : AbcWorkshop<TestWorker>() {
         @TestWorkLicense("worker1")
         protected val worker1 = TestWorker()
 
@@ -160,19 +158,21 @@ internal class AbcWorkshopTest {
 
     @Test
     fun `licensedWorkers with empty task ID`() {
-        val workshop = object : AbcWorkshop<TestWorker>() {
-            @TestWorkLicense("")
-            val worker = TestWorker()
-        }
+        val workshop =
+            object : AbcWorkshop<TestWorker>() {
+                @TestWorkLicense("")
+                val worker = TestWorker()
+            }
         assertEquals(1, workshop.licensedWorkers().size)
     }
 
     @Test
     fun `licensedWorkers with special characters in task ID`() {
-        val workshop = object : AbcWorkshop<TestWorker>() {
-            @TestWorkLicense("worker@123#test")
-            val worker = TestWorker()
-        }
+        val workshop =
+            object : AbcWorkshop<TestWorker>() {
+                @TestWorkLicense("worker@123#test")
+                val worker = TestWorker()
+            }
         assertEquals(1, workshop.licensedWorkers().size)
     }
 

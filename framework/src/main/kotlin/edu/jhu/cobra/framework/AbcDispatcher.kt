@@ -9,24 +9,28 @@ package edu.jhu.cobra.framework
  * @param W The type of worker managed by this dispatcher.
  */
 open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
-
     private val workers = mutableMapOf<ITask.ID, W>()
 
     override fun dispatch(forTask: ITask.ID): W? = workers[forTask]
 
     @Suppress("UNCHECKED_CAST")
-    override fun register(forTask: ITask.ID, toWorker: W, mode: RegisterMode) {
+    override fun register(
+        forTask: ITask.ID,
+        toWorker: W,
+        mode: RegisterMode,
+    ) {
         when (mode) {
             RegisterMode.REPLACE -> workers[forTask] = toWorker
             RegisterMode.ATTACH -> {
                 val existing = workers[forTask]
                 if (existing != null) {
-                    val chained = object : IWorker<ITask, Any?> {
-                        override fun work(task: ITask): Any? {
-                            (existing as IWorker<ITask, Any?>).work(task)
-                            return (toWorker as IWorker<ITask, Any?>).work(task)
+                    val chained =
+                        object : IWorker<ITask, Any?> {
+                            override fun work(task: ITask): Any? {
+                                (existing as IWorker<ITask, Any?>).work(task)
+                                return (toWorker as IWorker<ITask, Any?>).work(task)
+                            }
                         }
-                    }
                     workers[forTask] = chained as W
                 } else {
                     workers[forTask] = toWorker

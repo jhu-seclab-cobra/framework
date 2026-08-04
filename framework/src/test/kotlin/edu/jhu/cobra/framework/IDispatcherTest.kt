@@ -18,13 +18,12 @@
  */
 package edu.jhu.cobra.framework
 
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.BeforeTest
 
 internal class IDispatcherTest {
-
     private lateinit var dispatcher: AbcDispatcher<TestWorker>
     private lateinit var worker: TestWorker
 

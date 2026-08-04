@@ -18,7 +18,6 @@ import kotlin.reflect.jvm.isAccessible
  * @param W The type of worker managed by this workshop; must extend [IWorker].
  */
 abstract class AbcWorkshop<W : IWorker<*, *>> {
-
     /**
      * Returns a map of all licensed workers in this workshop, keyed by their task identifiers.
      *
@@ -27,8 +26,10 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
      *
      * @return Map from [ITask.ID] to [W].
      */
-    fun licensedWorkers(): Map<ITask.ID, W> = licensedProperties()
-        .flatMap { (worker, licenses) -> licenses.map { license -> WorkLicense.getTaskID(license) to worker } }.toMap()
+    fun licensedWorkers(): Map<ITask.ID, W> =
+        licensedProperties()
+            .flatMap { (worker, licenses) -> licenses.map { license -> WorkLicense.getTaskID(license) to worker } }
+            .toMap()
 
     /**
      * Registers all licensed workers from this workshop into the given dispatcher.
@@ -36,8 +37,9 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
      */
     fun registerTo(dispatcher: IDispatcher<W>) {
         licensedProperties()
-            .flatMap { (worker, licenses) -> licenses.map { license -> Triple(WorkLicense.getTaskID(license), worker, extractMode(license)) } }
-            .forEach { (taskId, worker, mode) -> dispatcher.register(taskId, worker, mode) }
+            .flatMap { (worker, licenses) ->
+                licenses.map { license -> Triple(WorkLicense.getTaskID(license), worker, extractMode(license)) }
+            }.forEach { (taskId, worker, mode) -> dispatcher.register(taskId, worker, mode) }
     }
 
     /**
@@ -49,7 +51,9 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
      */
     private fun licensedProperties(): Sequence<Pair<W, List<Annotation>>> {
         @Suppress("UNCHECKED_CAST")
-        return this::class.declaredMemberProperties.asSequence()
+        return this::class
+            .declaredMemberProperties
+            .asSequence()
             .filter { p -> (p.returnType.classifier as? KClass<*>)?.isSubclassOf(IWorker::class) == true }
             .map { p -> p as KProperty1<AbcWorkshop<W>, W> }
             .map { p -> p to p.annotations.filter { it.annotationClass.hasAnnotation<WorkLicense>() } }
@@ -58,12 +62,14 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
     }
 
     private fun extractMode(annotation: Annotation): RegisterMode {
-        annotation.annotationClass.primaryConstructor?.parameters
+        annotation.annotationClass.primaryConstructor
+            ?.parameters
             ?.firstOrNull { it.name == "mode" }
             ?: return RegisterMode.ATTACH
-        val memberProp = annotation.annotationClass.declaredMemberProperties
-            .firstOrNull { it.name == "mode" }
-            ?: return RegisterMode.ATTACH
+        val memberProp =
+            annotation.annotationClass.declaredMemberProperties
+                .firstOrNull { it.name == "mode" }
+                ?: return RegisterMode.ATTACH
         return (memberProp.call(annotation) as? RegisterMode) ?: RegisterMode.ATTACH
     }
 }

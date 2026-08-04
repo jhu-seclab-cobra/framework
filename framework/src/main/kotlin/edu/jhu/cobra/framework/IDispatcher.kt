@@ -6,6 +6,7 @@ package edu.jhu.cobra.framework
 enum class RegisterMode {
     /** Replaces any existing worker for the same task ID. */
     REPLACE,
+
     /** Chains with existing worker — both execute in registration order. */
     ATTACH,
 }
@@ -18,7 +19,6 @@ enum class RegisterMode {
  * @param Worker The type of worker managed by this dispatcher; must extend [IWorker].
  */
 interface IDispatcher<Worker : IWorker<*, *>> {
-
     /**
      * Returns a worker capable of handling the specified task.
      *
@@ -35,5 +35,9 @@ interface IDispatcher<Worker : IWorker<*, *>> {
      * @param toWorker The [Worker] to register.
      * @param mode [RegisterMode.REPLACE] overwrites existing; [RegisterMode.ATTACH] chains with existing.
      */
-    fun register(forTask: ITask.ID, toWorker: Worker, mode: RegisterMode = RegisterMode.ATTACH)
+    fun register(
+        forTask: ITask.ID,
+        toWorker: Worker,
+        mode: RegisterMode = RegisterMode.ATTACH,
+    )
 }

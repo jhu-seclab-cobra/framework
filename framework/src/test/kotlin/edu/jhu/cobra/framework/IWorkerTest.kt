@@ -29,26 +29,27 @@ package edu.jhu.cobra.framework
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
 internal class IWorkerTest {
-
     @Test
     fun `work returns result synchronously`() {
-        val worker = IWorker<TestTask, TestResult> { task ->
-            TestResult("Processed: ${task.uid.license}")
-        }
+        val worker =
+            IWorker<TestTask, TestResult> { task ->
+                TestResult("Processed: ${task.uid.license}")
+            }
         val result = worker.work(TestTask(ITask.ID("TestTask", emptySet())))
         assertEquals("Processed: TestTask", result.value)
     }
 
     @Test
     fun `work receives task properties`() {
-        val worker = IWorker<TestTask, TestResult> { task ->
-            TestResult(task.uid.props.joinToString())
-        }
+        val worker =
+            IWorker<TestTask, TestResult> { task ->
+                TestResult(task.uid.props.joinToString())
+            }
         val result = worker.work(TestTask(ITask.ID("T", setOf("a", "b", "c"))))
         assertTrue(result.value.contains("a"))
         assertTrue(result.value.contains("b"))
