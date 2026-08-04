@@ -13,30 +13,33 @@ public open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
 
     override fun dispatch(forTask: ITask.ID): W? = workers[forTask]
 
-    @Suppress("UNCHECKED_CAST")
     override fun register(
         forTask: ITask.ID,
         toWorker: W,
         mode: RegisterMode,
     ) {
-        when (mode) {
-            RegisterMode.REPLACE -> workers[forTask] = toWorker
-            RegisterMode.ATTACH -> {
-                val existing = workers[forTask]
-                if (existing != null) {
-                    val chained =
-                        object : IWorker<ITask, Any?> {
-                            override fun work(task: ITask): Any? {
-                                (existing as IWorker<ITask, Any?>).work(task)
-                                return (toWorker as IWorker<ITask, Any?>).work(task)
-                            }
-                        }
-                    workers[forTask] = chained as W
-                } else {
-                    workers[forTask] = toWorker
+        if (mode == RegisterMode.REPLACE) {
+            workers[forTask] = toWorker
+            return
+        }
+        val existing = workers[forTask]
+        workers[forTask] = if (existing == null) toWorker else chain(existing, toWorker)
+    }
+
+    // Runs the existing worker, then the new one, returning the new one's result.
+    @Suppress("UNCHECKED_CAST")
+    private fun chain(
+        existing: W,
+        toWorker: W,
+    ): W {
+        val chained =
+            object : IWorker<ITask, Any?> {
+                override fun work(task: ITask): Any? {
+                    (existing as IWorker<ITask, Any?>).work(task)
+                    return (toWorker as IWorker<ITask, Any?>).work(task)
                 }
             }
-        }
+        return chained as W
     }
 
     /**
