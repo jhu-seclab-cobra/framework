@@ -19,6 +19,7 @@
  * - `getTaskID from annotation instance extracts parameters`: reflection-based extraction
  * - `getTaskID from annotation excludes RegisterMode properties`: mode is registration metadata, not a discriminant
  * - `getTaskID distinguishes same-named classes from different packages`: license is the qualified class name
+ * - `getTaskID reports annotation without primary constructor by name`: contextual error, no bare NPE
  *
  * WorkLicense.isTaskID:
  * - `isTaskID matches same class`: positive match
@@ -29,6 +30,7 @@ package edu.jhu.cobra.framework
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -113,6 +115,34 @@ internal class IWorkerTest {
         val utilDateId = WorkLicense.getTaskID(java.util.Date::class.java, "x")
         val sqlDateId = WorkLicense.getTaskID(java.sql.Date::class.java, "x")
         assertNotEquals(utilDateId, sqlDateId)
+    }
+
+    /** Annotation literal whose class has no primary constructor. */
+    class NoPrimaryCtorLiteral : Annotation {
+        constructor()
+
+        fun annotationType(): Class<out Annotation> = NoPrimaryCtorLiteral::class.java
+    }
+
+    /** Annotation literal whose constructor parameter has no matching member property. */
+    class ParamWithoutPropertyLiteral(
+        @Suppress("UNUSED_PARAMETER") name: String,
+    ) : Annotation {
+        fun annotationType(): Class<out Annotation> = ParamWithoutPropertyLiteral::class.java
+    }
+
+    @Test
+    fun `getTaskID reports annotation without primary constructor by name`() {
+        val failure = assertFailsWith<IllegalStateException> { WorkLicense.getTaskID(NoPrimaryCtorLiteral()) }
+        assertTrue("NoPrimaryCtorLiteral" in failure.message.orEmpty())
+    }
+
+    @Test
+    fun `getTaskID reports missing member property by name`() {
+        val failure =
+            assertFailsWith<IllegalStateException> { WorkLicense.getTaskID(ParamWithoutPropertyLiteral("x")) }
+        assertTrue("ParamWithoutPropertyLiteral" in failure.message.orEmpty())
+        assertTrue("name" in failure.message.orEmpty())
     }
 
     @Test

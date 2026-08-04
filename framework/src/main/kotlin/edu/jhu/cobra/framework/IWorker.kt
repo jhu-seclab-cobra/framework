@@ -69,11 +69,15 @@ public annotation class WorkLicense {
  */
 public fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
     val annoCls = annotation.annotationClass
+    val primaryCtor =
+        annoCls.primaryConstructor
+            ?: error("annotation ${annoCls.qualifiedName} has no primary constructor")
     val annotatedProps =
-        annoCls.primaryConstructor!!
-            .parameters
-            .map { it.name }
-            .map { tar -> annoCls.declaredMemberProperties.first { it.name == tar } }
+        primaryCtor.parameters
+            .map { param ->
+                annoCls.declaredMemberProperties.firstOrNull { it.name == param.name }
+                    ?: error("annotation ${annoCls.qualifiedName} has no property named ${param.name}")
+            }
     val innerStr =
         annotatedProps
             .filterNot { it.returnType.classifier == RegisterMode::class }
