@@ -13,7 +13,7 @@ interface ITask {
     /**
      * Unique identifier for a task, consisting of a license and associated properties.
      *
-     * @property license The license or type name for the task.
+     * @property license The license identifier — the fully qualified name of the license class.
      * @property props The set of properties describing the task.
      */
     data class ID(val license: String, val props: Set<String>)
@@ -79,16 +79,16 @@ fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
  * Constructs a task ID from a class and property strings.
  */
 fun WorkLicense.Companion.getTaskID(cls: Class<*>, vararg props: String) =
-    ITask.ID(cls.simpleName, props.toSet())
+    ITask.ID(cls.name, props.toSet())
 
 /**
  * Constructs a task ID from a class and a collection of property strings.
  */
 fun WorkLicense.Companion.getTaskID(cls: Class<*>, props: Collection<String>) =
-    ITask.ID(cls.simpleName, props.toSet())
+    ITask.ID(cls.name, props.toSet())
 
 /**
  * Checks if a given task ID matches a specified license class.
  */
 fun WorkLicense.Companion.isTaskID(taskID: ITask.ID, forLicense: Class<*>) =
-    taskID.license == forLicense.simpleName
+    taskID.license == forLicense.name

@@ -18,6 +18,7 @@
  * - `getTaskID from class with props`: multi-arg construction
  * - `getTaskID from annotation instance extracts parameters`: reflection-based extraction
  * - `getTaskID from annotation excludes RegisterMode properties`: mode is registration metadata, not a discriminant
+ * - `getTaskID distinguishes same-named classes from different packages`: license is the qualified class name
  *
  * WorkLicense.isTaskID:
  * - `isTaskID matches same class`: positive match
@@ -28,6 +29,7 @@ package edu.jhu.cobra.framework
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
@@ -94,15 +96,22 @@ internal class IWorkerTest {
     @Test
     fun `getTaskID from class with empty props`() {
         val id = WorkLicense.getTaskID(TestTask::class.java)
-        assertEquals("TestTask", id.license)
+        assertEquals("edu.jhu.cobra.framework.TestTask", id.license)
         assertTrue(id.props.isEmpty())
     }
 
     @Test
     fun `getTaskID from class with props`() {
         val id = WorkLicense.getTaskID(TestTask::class.java, "@!#")
-        assertEquals("TestTask", id.license)
+        assertEquals("edu.jhu.cobra.framework.TestTask", id.license)
         assertEquals(setOf("@!#"), id.props)
+    }
+
+    @Test
+    fun `getTaskID distinguishes same-named classes from different packages`() {
+        val utilDateId = WorkLicense.getTaskID(java.util.Date::class.java, "x")
+        val sqlDateId = WorkLicense.getTaskID(java.sql.Date::class.java, "x")
+        assertNotEquals(utilDateId, sqlDateId)
     }
 
     @Test
@@ -110,7 +119,7 @@ internal class IWorkerTest {
         val workshop = TestWorkshop()
         val workers = workshop.licensedWorkers()
         val taskId = workers.keys.first { "worker1" in it.props }
-        assertEquals("TestWorkLicense", taskId.license)
+        assertEquals("edu.jhu.cobra.framework.TestWorkLicense", taskId.license)
         assertEquals(setOf("worker1"), taskId.props)
     }
 
@@ -118,7 +127,7 @@ internal class IWorkerTest {
     fun `getTaskID from annotation excludes RegisterMode properties`() {
         val workers = TestModedWorkshop().licensedWorkers()
         val taskId = workers.keys.single()
-        assertEquals("TestModedLicense", taskId.license)
+        assertEquals("edu.jhu.cobra.framework.TestModedLicense", taskId.license)
         assertEquals(setOf("modedWorker"), taskId.props)
     }
 
