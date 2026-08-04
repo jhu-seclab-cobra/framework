@@ -45,7 +45,7 @@ open class TestWorkshop : AbcWorkshop<TestWorker>() {
     val unlicensedWorker = TestWorker()
 }
 
-class TestModedWorkshop : AbcWorkshop<TestWorker>() {
+class TestModedWorkshop : AbcWorkshop<IWorker<TestTask, TestResult>>() {
     @TestModedLicense("modedWorker", mode = RegisterMode.REPLACE)
     val modedWorker = TestWorker()
 }

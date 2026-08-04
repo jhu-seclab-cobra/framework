@@ -6,6 +6,9 @@
  * - `register and dispatch multiple workers`: multi-worker registry
  * - `register with REPLACE overwrites existing worker`: explicit last-write-wins
  * - `register with ATTACH chains workers in order`: default mode chains both workers
+ * - `register with ATTACH chains three workers in order`: chain of chains preserves order
+ * - `register with ATTACH returns the last worker's result`: earlier results discarded
+ * - `register with REPLACE after ATTACH discards the chain`: REPLACE drops all chained workers
  * - `register same worker for different tasks`: one worker, multiple IDs
  * - `register with empty task ID`: boundary
  * - `register with empty properties`: boundary
@@ -24,7 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 internal class IDispatcherTest {
-    private lateinit var dispatcher: AbcDispatcher<TestWorker>
+    private lateinit var dispatcher: AbcDispatcher<TestTask, TestResult>
     private lateinit var worker: TestWorker
 
     @BeforeTest
@@ -68,12 +71,45 @@ internal class IDispatcherTest {
     @Test
     fun `register with ATTACH chains workers in order`() {
         val calls = mutableListOf<String>()
-        val chaining = AbcDispatcher<IWorker<TestTask, Unit>>()
+        val chaining = AbcDispatcher<TestTask, Unit>()
         val id = ITask.ID("TestTask", setOf("prop1"))
         chaining.register(id, { calls.add("first") })
         chaining.register(id, { calls.add("second") })
         chaining.dispatch(id)!!.work(TestTask(id))
         assertEquals(listOf("first", "second"), calls)
+    }
+
+    @Test
+    fun `register with ATTACH chains three workers in order`() {
+        val calls = mutableListOf<String>()
+        val chaining = AbcDispatcher<TestTask, Unit>()
+        val id = ITask.ID("TestTask", setOf("prop1"))
+        chaining.register(id, { calls.add("first") })
+        chaining.register(id, { calls.add("second") })
+        chaining.register(id, { calls.add("third") })
+        chaining.dispatch(id)!!.work(TestTask(id))
+        assertEquals(listOf("first", "second", "third"), calls)
+    }
+
+    @Test
+    fun `register with ATTACH returns the last worker's result`() {
+        val chaining = AbcDispatcher<TestTask, String>()
+        val id = ITask.ID("TestTask", setOf("prop1"))
+        chaining.register(id, { "first" })
+        chaining.register(id, { "second" })
+        assertEquals("second", chaining.dispatch(id)!!.work(TestTask(id)))
+    }
+
+    @Test
+    fun `register with REPLACE after ATTACH discards the chain`() {
+        val calls = mutableListOf<String>()
+        val chaining = AbcDispatcher<TestTask, Unit>()
+        val id = ITask.ID("TestTask", setOf("prop1"))
+        chaining.register(id, { calls.add("first") })
+        chaining.register(id, { calls.add("second") })
+        chaining.register(id, { calls.add("only") }, RegisterMode.REPLACE)
+        chaining.dispatch(id)!!.work(TestTask(id))
+        assertEquals(listOf("only"), calls)
     }
 
     @Test

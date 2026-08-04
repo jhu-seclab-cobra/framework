@@ -6,16 +6,17 @@ package edu.jhu.cobra.framework
  * Manages a map of task ID to worker. Supports chaining multiple workers for the same
  * task ID via [RegisterMode.ATTACH] (default) — workers execute in registration order.
  *
- * @param W The type of worker managed by this dispatcher.
+ * @param T The type of task handled by this dispatcher's workers.
+ * @param R The type of result produced by this dispatcher's workers.
  */
-public open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
-    private val workers = mutableMapOf<ITask.ID, W>()
+public open class AbcDispatcher<T : ITask, R> : IDispatcher<IWorker<T, R>> {
+    private val workers = mutableMapOf<ITask.ID, IWorker<T, R>>()
 
-    override fun dispatch(forTask: ITask.ID): W? = workers[forTask]
+    override fun dispatch(forTask: ITask.ID): IWorker<T, R>? = workers[forTask]
 
     override fun register(
         forTask: ITask.ID,
-        toWorker: W,
+        toWorker: IWorker<T, R>,
         mode: RegisterMode,
     ) {
         if (mode == RegisterMode.REPLACE) {
@@ -27,25 +28,12 @@ public open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
     }
 
     // Runs the existing worker, then the new one, returning the new one's result.
-    @Suppress("UNCHECKED_CAST")
     private fun chain(
-        existing: W,
-        toWorker: W,
-    ): W {
-        val chained =
-            object : IWorker<ITask, Any?> {
-                override fun work(task: ITask): Any? {
-                    (existing as IWorker<ITask, Any?>).work(task)
-                    return (toWorker as IWorker<ITask, Any?>).work(task)
-                }
-            }
-        return chained as W
-    }
-
-    /**
-     * Registers all licensed workers from a workshop, respecting each annotation's mode.
-     */
-    public fun register(workshop: AbcWorkshop<W>) {
-        workshop.registerTo(this)
-    }
+        existing: IWorker<T, R>,
+        toWorker: IWorker<T, R>,
+    ): IWorker<T, R> =
+        IWorker { task ->
+            existing.work(task)
+            toWorker.work(task)
+        }
 }

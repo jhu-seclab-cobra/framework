@@ -188,7 +188,7 @@ internal class AbcWorkshopTest {
         assertEquals(1, workshop.licensedWorkers().size)
     }
 
-    class RenamedModeWorkshop : AbcWorkshop<TestWorker>() {
+    class RenamedModeWorkshop : AbcWorkshop<IWorker<TestTask, TestResult>>() {
         @TestRenamedModeLicense("renamed", priority = RegisterMode.REPLACE)
         val worker = TestWorker()
     }
@@ -196,7 +196,7 @@ internal class AbcWorkshopTest {
     @Test
     fun `registerTo respects REPLACE mode from mode-named property`() {
         val workshop = TestModedWorkshop()
-        val dispatcher = AbcDispatcher<TestWorker>()
+        val dispatcher = AbcDispatcher<TestTask, TestResult>()
         workshop.registerTo(dispatcher)
         workshop.registerTo(dispatcher)
         val id = WorkLicense.getTaskID(TestModedLicense::class.java, "modedWorker")
@@ -206,7 +206,7 @@ internal class AbcWorkshopTest {
     @Test
     fun `registerTo respects REPLACE mode from RegisterMode-typed property with another name`() {
         val workshop = RenamedModeWorkshop()
-        val dispatcher = AbcDispatcher<TestWorker>()
+        val dispatcher = AbcDispatcher<TestTask, TestResult>()
         workshop.registerTo(dispatcher)
         workshop.registerTo(dispatcher)
         val id = WorkLicense.getTaskID(TestRenamedModeLicense::class.java, "renamed")
@@ -216,7 +216,7 @@ internal class AbcWorkshopTest {
     @Test
     fun `licensedWorkers produces correct task IDs for dispatcher registration`() {
         val workshop = TestWorkshop()
-        val dispatcher = AbcDispatcher<TestWorker>()
+        val dispatcher = AbcDispatcher<TestTask, TestResult>()
         workshop.licensedWorkers().forEach { (id, worker) -> dispatcher.register(id, worker) }
         val id = WorkLicense.getTaskID(TestWorkLicense::class.java, "worker1")
         val dispatched = dispatcher.dispatch(id)
