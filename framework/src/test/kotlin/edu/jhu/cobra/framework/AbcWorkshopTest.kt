@@ -10,6 +10,7 @@
  * - `licensedWorkers with null-valued workers`: included in map (design doc: null-valued included)
  * - `licensedWorkers with empty task ID`: empty string valid
  * - `licensedWorkers with special characters in task ID`: no character constraints
+ * - `licensedWorkers excludes licensed non-worker properties`: return type must be a worker
  *
  * Inheritance:
  * - `licensedWorkers only discovers declared properties not inherited`: declaredMemberProperties
@@ -79,6 +80,22 @@ internal class AbcWorkshopTest {
         protected val worker1 = TestWorker()
 
         fun accessWorker1() = worker1
+    }
+
+    class NonWorkerWorkshop : AbcWorkshop<TestWorker>() {
+        @TestWorkLicense("worker1")
+        val worker1 = TestWorker()
+
+        @TestWorkLicense("notAWorker")
+        val label: String = "not a worker"
+    }
+
+    @Test
+    fun `licensedWorkers excludes licensed non-worker properties`() {
+        val workshop = NonWorkerWorkshop()
+        val licensed = workshop.licensedWorkers()
+        assertEquals(1, licensed.size)
+        assertTrue(licensed.values.contains(workshop.worker1))
     }
 
     @Test
