@@ -2,12 +2,16 @@
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kover = "0.9.1"
+ktlint = "14.0.1"
+detekt = "1.23.8"
 jvm = "21"
 cobra = "0.1.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
 [libraries]
 cobra-commons-graph = { module = "com.github.jhu-seclab-cobra.commons-graph:graph", version.ref = "cobra" }

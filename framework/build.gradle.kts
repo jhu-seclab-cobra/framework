@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlinx.kover)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
     `java-library`
     `maven-publish`
 }
@@ -8,7 +10,10 @@ plugins {
 group = "edu.jhu.cobra"
 version = "0.1.0"
 
-val jvmVersion = libs.versions.jvm.get().toInt()
+val jvmVersion =
+    libs.versions.jvm
+        .get()
+        .toInt()
 
 repositories {
     mavenCentral()
@@ -34,4 +39,23 @@ java {
 
 publishing {
     publications { create<MavenPublication>("maven") { from(components["java"]) } }
+}
+
+ktlint {
+    version.set("1.5.0")
+    verbose.set(true)
+    android.set(false)
+    outputToConsole.set(true)
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
+    }
+}
+
+detekt {
+    // Resolve the repository's own config even when this module is embedded
+    // as a subproject of an enclosing build.
+    config.setFrom(files("${projectDir.parentFile}/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    parallel = true
 }
