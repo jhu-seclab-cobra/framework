@@ -8,14 +8,14 @@ import kotlin.reflect.full.primaryConstructor
  *
  * Each task has a unique identifier ([uid]) for dispatching and mapping to workers.
  */
-interface ITask {
+public interface ITask {
     /**
      * Unique identifier for a task, consisting of a license and associated properties.
      *
      * @property license The license identifier — the fully qualified name of the license class.
      * @property props The set of properties describing the task.
      */
-    data class ID(
+    public data class ID(
         val license: String,
         val props: Set<String>,
     )
@@ -23,7 +23,7 @@ interface ITask {
     /**
      * Unique identifier for the task instance.
      */
-    val uid: ID
+    public val uid: ID
 }
 
 /**
@@ -35,14 +35,14 @@ interface ITask {
  * @param T The type of task this worker can handle; must extend [ITask].
  * @param R The type of result this worker produces.
  */
-fun interface IWorker<T : ITask, R> {
+public fun interface IWorker<T : ITask, R> {
     /**
      * Performs the given task and returns a result.
      *
      * @param task The task to perform.
      * @return The result of processing the task.
      */
-    fun work(task: T): R
+    public fun work(task: T): R
 }
 
 /**
@@ -53,8 +53,8 @@ fun interface IWorker<T : ITask, R> {
  */
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class WorkLicense {
-    companion object
+public annotation class WorkLicense {
+    public companion object
 }
 
 /**
@@ -67,7 +67,7 @@ annotation class WorkLicense {
  * @param annotation The annotation instance.
  * @return The generated [ITask.ID].
  */
-fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
+public fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
     val annoCls = annotation.annotationClass
     val annotatedProps =
         annoCls.primaryConstructor!!
@@ -84,23 +84,23 @@ fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
 /**
  * Constructs a task ID from a class and property strings.
  */
-fun WorkLicense.Companion.getTaskID(
+public fun WorkLicense.Companion.getTaskID(
     cls: Class<*>,
     vararg props: String,
-) = ITask.ID(cls.name, props.toSet())
+): ITask.ID = ITask.ID(cls.name, props.toSet())
 
 /**
  * Constructs a task ID from a class and a collection of property strings.
  */
-fun WorkLicense.Companion.getTaskID(
+public fun WorkLicense.Companion.getTaskID(
     cls: Class<*>,
     props: Collection<String>,
-) = ITask.ID(cls.name, props.toSet())
+): ITask.ID = ITask.ID(cls.name, props.toSet())
 
 /**
  * Checks if a given task ID matches a specified license class.
  */
-fun WorkLicense.Companion.isTaskID(
+public fun WorkLicense.Companion.isTaskID(
     taskID: ITask.ID,
     forLicense: Class<*>,
-) = taskID.license == forLicense.name
+): Boolean = taskID.license == forLicense.name

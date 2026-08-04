@@ -17,7 +17,7 @@ import kotlin.reflect.jvm.isAccessible
  *
  * @param W The type of worker managed by this workshop; must extend [IWorker].
  */
-abstract class AbcWorkshop<W : IWorker<*, *>> {
+public abstract class AbcWorkshop<W : IWorker<*, *>> {
     /**
      * Returns a map of all licensed workers in this workshop, keyed by their task identifiers.
      *
@@ -26,7 +26,7 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
      *
      * @return Map from [ITask.ID] to [W].
      */
-    fun licensedWorkers(): Map<ITask.ID, W> =
+    public fun licensedWorkers(): Map<ITask.ID, W> =
         licensedProperties()
             .flatMap { (worker, licenses) -> licenses.map { license -> WorkLicense.getTaskID(license) to worker } }
             .toMap()
@@ -35,7 +35,7 @@ abstract class AbcWorkshop<W : IWorker<*, *>> {
      * Registers all licensed workers from this workshop into the given dispatcher.
      * Reads [RegisterMode] from each annotation's `mode` property (defaults to ATTACH if absent).
      */
-    fun registerTo(dispatcher: IDispatcher<W>) {
+    public fun registerTo(dispatcher: IDispatcher<W>) {
         licensedProperties()
             .flatMap { (worker, licenses) ->
                 licenses.map { license -> Triple(WorkLicense.getTaskID(license), worker, extractMode(license)) }

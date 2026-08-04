@@ -8,7 +8,7 @@ package edu.jhu.cobra.framework
  *
  * @param W The type of worker managed by this dispatcher.
  */
-open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
+public open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
     private val workers = mutableMapOf<ITask.ID, W>()
 
     override fun dispatch(forTask: ITask.ID): W? = workers[forTask]
@@ -42,7 +42,7 @@ open class AbcDispatcher<W : IWorker<*, *>> : IDispatcher<W> {
     /**
      * Registers all licensed workers from a workshop, respecting each annotation's mode.
      */
-    fun register(workshop: AbcWorkshop<W>) {
+    public fun register(workshop: AbcWorkshop<W>) {
         workshop.registerTo(this)
     }
 }
