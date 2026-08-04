@@ -24,6 +24,7 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
      * and maps each to its corresponding [ITask.ID].
      *
      * @return Map from [ITask.ID] to [W].
+     * @throws IllegalStateException when a licensed property holds a null value.
      */
     public fun licensedWorkers(): Map<ITask.ID, W> =
         licensedProperties()
@@ -32,8 +33,11 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
 
     /**
      * Registers all licensed workers from this workshop into the given dispatcher.
-     * Reads [RegisterMode] from each annotation's [RegisterMode]-typed property, matching the
-     * property [WorkLicense.getTaskID] excludes; ATTACH when the annotation declares none.
+     * The [RegisterMode] is read from the annotation's [RegisterMode]-typed property — the same
+     * property [WorkLicense.getTaskID] excludes; defaults to [RegisterMode.ATTACH] when the
+     * annotation declares none.
+     *
+     * @throws IllegalStateException when a licensed property holds a null value.
      */
     public fun registerTo(dispatcher: IDispatcher<W>) {
         licensedProperties()
@@ -47,7 +51,11 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
      * [WorkLicense]-marked annotation, paired with those annotations.
      *
      * Generic reflection erases [W], so the filter checks the return-type classifier against
-     * [IWorker]; the cast to [W] is the caller-declared worker type of this workshop.
+     * [IWorker]; the cast to [W]? is the caller-declared worker type of this workshop, nullable
+     * because the declared property may itself be nullable.
+     *
+     * A licensed property holding null is a wiring bug: dispatch would hand callers null for a
+     * task the workshop claims to serve. [requireWorker] fails fast on it.
      */
     private fun licensedProperties(): Sequence<Pair<W, List<Annotation>>> {
         @Suppress("UNCHECKED_CAST")
@@ -55,11 +63,15 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
             .declaredMemberProperties
             .asSequence()
             .filter { p -> (p.returnType.classifier as? KClass<*>)?.isSubclassOf(IWorker::class) == true }
-            .map { p -> p as KProperty1<AbcWorkshop<W>, W> }
+            .map { p -> p as KProperty1<AbcWorkshop<W>, W?> }
             .map { p -> p to p.annotations.filter { it.annotationClass.hasAnnotation<WorkLicense>() } }
             .filter { (_, licenses) -> licenses.isNotEmpty() }
-            .map { (prop, licenses) -> prop.apply { isAccessible = true }.get(this) to licenses }
+            .map { (prop, licenses) -> requireWorker(prop) to licenses }
     }
+
+    private fun requireWorker(prop: KProperty1<AbcWorkshop<W>, W?>): W =
+        prop.apply { isAccessible = true }.get(this)
+            ?: error("workshop ${this::class.qualifiedName} licensed property ${prop.name} is null at registration")
 
     private fun extractMode(annotation: Annotation): RegisterMode {
         val annoCls = annotation.annotationClass

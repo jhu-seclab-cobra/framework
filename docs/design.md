@@ -131,11 +131,12 @@ Discovery rules:
 No custom exceptions. Error conditions:
 - `IDispatcher.dispatch` returns `null` for unregistered Task IDs.
 - `WorkLicense.getTaskID(Annotation)` throws `NullPointerException` if annotation class lacks primary constructor.
+- `AbcWorkshop.licensedWorkers` / `registerTo` throw `IllegalStateException` for a licensed property whose value is null, naming the workshop class and property.
 
 ## Validation Rules
 
 - `ITask.ID`: No constraints on `license` or `props` values.
 - `IDispatcher.register`: Duplicate registrations silently overwrite.
-- `AbcWorkshop.licensedWorkers`: Null-valued annotated properties included in map.
+- `AbcWorkshop.licensedWorkers`: Null-valued licensed property is a wiring bug — `IllegalStateException`, never a silent skip or a null map value.
 - `WorkLicense` target restricted to `ANNOTATION_CLASS`.
 - `IWorker.work` is synchronous. Concurrency managed by the caller, not the framework.

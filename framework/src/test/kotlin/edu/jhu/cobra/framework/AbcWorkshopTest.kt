@@ -7,7 +7,8 @@
  * - `licensedWorkers with all workers licensed`: full result
  * - `licensedWorkers discovers private workers`: isAccessible = true
  * - `licensedWorkers discovers protected workers`: isAccessible = true
- * - `licensedWorkers with null-valued workers`: included in map (design doc: null-valued included)
+ * - `licensedWorkers with null-valued workers fails`: null-valued licensed property is an error
+ *   naming the workshop class and property (design doc: null-valued licensed property is a wiring bug)
  * - `licensedWorkers with empty task ID`: empty string valid
  * - `licensedWorkers with special characters in task ID`: no character constraints
  * - `licensedWorkers excludes licensed non-worker properties`: return type must be a worker
@@ -30,6 +31,7 @@ package edu.jhu.cobra.framework
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -149,9 +151,14 @@ internal class AbcWorkshopTest {
     }
 
     @Test
-    fun `licensedWorkers with null-valued workers`() {
-        val licensed = NullWorkerWorkshop().licensedWorkers()
-        assertEquals(2, licensed.size)
+    fun `licensedWorkers with null-valued workers fails`() {
+        val failure =
+            assertFailsWith<IllegalStateException> {
+                NullWorkerWorkshop().licensedWorkers()
+            }
+        val message = failure.message.orEmpty()
+        assertTrue(message.contains("NullWorkerWorkshop"))
+        assertTrue(message.contains("worker1") || message.contains("worker2"))
     }
 
     @Test
