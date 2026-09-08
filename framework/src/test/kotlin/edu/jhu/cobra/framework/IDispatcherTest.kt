@@ -1,4 +1,4 @@
-/**
+/*
  * Unit tests for [IDispatcher] via its default implementation [AbcDispatcher].
  *
  * Registration:

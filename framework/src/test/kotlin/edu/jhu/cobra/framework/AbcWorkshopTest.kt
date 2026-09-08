@@ -1,4 +1,4 @@
-/**
+/*
  * Unit tests for [AbcWorkshop] discovery mechanism.
  *
  * Discovery:
