@@ -46,17 +46,8 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
             }.forEach { (taskId, worker, mode) -> dispatcher.register(taskId, worker, mode) }
     }
 
-    /**
-     * Discovers declared properties whose return type is a worker and that carry at least one
-     * [WorkLicense]-marked annotation, paired with those annotations.
-     *
-     * Generic reflection erases [W], so the filter checks the return-type classifier against
-     * [IWorker]; the cast to [W]? is the caller-declared worker type of this workshop, nullable
-     * because the declared property may itself be nullable.
-     *
-     * A licensed property holding null is a wiring bug: dispatch would hand callers null for a
-     * task the workshop claims to serve. [requireWorker] fails fast on it.
-     */
+    // Reflection erases W, so worker-typed properties are matched on the IWorker classifier and
+    // cast to the caller-declared W; the value is nullable because the property itself may be.
     private fun licensedProperties(): Sequence<Pair<W, List<Annotation>>> {
         @Suppress("UNCHECKED_CAST")
         return this::class
@@ -64,14 +55,15 @@ public abstract class AbcWorkshop<W : IWorker<*, *>> {
             .asSequence()
             .filter { p -> (p.returnType.classifier as? KClass<*>)?.isSubclassOf(IWorker::class) == true }
             .map { p -> p as KProperty1<AbcWorkshop<W>, W?> }
-            .map { p -> p to p.annotations.filter { it.annotationClass.hasAnnotation<WorkLicense>() } }
+            .map { p -> p to p.annotations.filter { annotation -> annotation.annotationClass.hasAnnotation<WorkLicense>() } }
             .filter { (_, licenses) -> licenses.isNotEmpty() }
             .map { (prop, licenses) -> requireWorker(prop) to licenses }
     }
 
+    // A null licensed worker would make dispatch hand callers null for a task the workshop claims to serve.
     private fun requireWorker(prop: KProperty1<AbcWorkshop<W>, W?>): W =
         prop.apply { isAccessible = true }.get(this)
-            ?: error("workshop ${this::class.qualifiedName} licensed property ${prop.name} is null at registration")
+            ?: error("workshop ${this::class.qualifiedName} licensed property ${prop.name} is null")
 
     private fun extractMode(annotation: Annotation): RegisterMode {
         val annoCls = annotation.annotationClass
