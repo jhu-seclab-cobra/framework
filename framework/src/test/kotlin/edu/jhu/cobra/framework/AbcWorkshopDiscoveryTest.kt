@@ -1,5 +1,5 @@
 /*
- * Unit tests for [AbcWorkshop] discovery mechanism.
+ * Unit tests for [AbcWorkshop.licensedWorkers] discovery.
  *
  * Discovery:
  * - `licensedWorkers returns only licensed workers`: excludes unlicensed
@@ -12,6 +12,7 @@
  * - `licensedWorkers with empty task ID`: empty string valid
  * - `licensedWorkers with special characters in task ID`: no character constraints
  * - `licensedWorkers excludes licensed non-worker properties`: return type must be a worker
+ * - `licensedWorkers maps a property with two license annotations to two task IDs`: one entry per annotation
  *
  * Inheritance:
  * - `licensedWorkers only discovers declared properties not inherited`: declaredMemberProperties
@@ -21,11 +22,6 @@
  *
  * Integration:
  * - `licensedWorkers produces correct task IDs for dispatcher registration`: end-to-end
- *
- * Registration modes:
- * - `registerTo respects REPLACE mode from mode-named property`: re-registration overwrites, not chains
- * - `registerTo respects REPLACE mode from RegisterMode-typed property with another name`: mode
- *   selection by RegisterMode type, consistent with getTaskID exclusion
  */
 package edu.jhu.cobra.framework
 
@@ -35,7 +31,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class AbcWorkshopTest {
+internal class AbcWorkshopDiscoveryTest {
     class EmptyWorkshop : AbcWorkshop<TestWorker>() {
         val worker1 = TestWorker()
         val worker2 = TestWorker()
@@ -93,6 +89,25 @@ internal class AbcWorkshopTest {
 
         @TestWorkLicense("notAWorker")
         val label: String = "not a worker"
+    }
+
+    class DoubleLicensedWorkshop : AbcWorkshop<TestWorker>() {
+        @TestWorkLicense("first")
+        @TestModedLicense("second")
+        val worker = TestWorker()
+    }
+
+    @Test
+    fun `licensedWorkers maps a property with two license annotations to two task IDs`() {
+        val workshop = DoubleLicensedWorkshop()
+        val licensed = workshop.licensedWorkers()
+        assertEquals(
+            mapOf(
+                WorkLicense.getTaskID(TestWorkLicense::class.java, "first") to workshop.worker,
+                WorkLicense.getTaskID(TestModedLicense::class.java, "second") to workshop.worker,
+            ),
+            licensed,
+        )
     }
 
     @Test
@@ -186,31 +201,6 @@ internal class AbcWorkshopTest {
                 val worker = TestWorker()
             }
         assertEquals(1, workshop.licensedWorkers().size)
-    }
-
-    class RenamedModeWorkshop : AbcWorkshop<IWorker<TestTask, TestResult>>() {
-        @TestRenamedModeLicense("renamed", priority = RegisterMode.REPLACE)
-        val worker = TestWorker()
-    }
-
-    @Test
-    fun `registerTo respects REPLACE mode from mode-named property`() {
-        val workshop = TestModedWorkshop()
-        val dispatcher = AbcDispatcher<TestTask, TestResult>()
-        workshop.registerTo(dispatcher)
-        workshop.registerTo(dispatcher)
-        val id = WorkLicense.getTaskID(TestModedLicense::class.java, "modedWorker")
-        assertEquals(workshop.modedWorker, dispatcher.dispatch(id))
-    }
-
-    @Test
-    fun `registerTo respects REPLACE mode from RegisterMode-typed property with another name`() {
-        val workshop = RenamedModeWorkshop()
-        val dispatcher = AbcDispatcher<TestTask, TestResult>()
-        workshop.registerTo(dispatcher)
-        workshop.registerTo(dispatcher)
-        val id = WorkLicense.getTaskID(TestRenamedModeLicense::class.java, "renamed")
-        assertEquals(workshop.worker, dispatcher.dispatch(id))
     }
 
     @Test

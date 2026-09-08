@@ -1,8 +1,9 @@
 /*
- * Unit tests for [IDispatcher] via its default implementation [AbcDispatcher].
+ * Unit tests for [AbcDispatcher], the map-backed [IDispatcher] with ATTACH/REPLACE semantics.
  *
  * Registration:
- * - `register and dispatch single worker`: basic registration
+ * - `register and dispatch single worker`: ATTACH on a free ID stores the worker itself
+ * - `register with REPLACE on free ID stores worker`: REPLACE on a free ID stores the worker itself
  * - `register and dispatch multiple workers`: multi-worker registry
  * - `register with REPLACE overwrites existing worker`: explicit last-write-wins
  * - `register with ATTACH chains workers in order`: default mode chains both workers
@@ -26,7 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class IDispatcherTest {
+internal class AbcDispatcherTest {
     private lateinit var dispatcher: AbcDispatcher<TestTask, TestResult>
     private lateinit var worker: TestWorker
 
@@ -40,6 +41,13 @@ internal class IDispatcherTest {
     fun `register and dispatch single worker`() {
         val taskId = ITask.ID("TestTask", setOf("prop1"))
         dispatcher.register(taskId, worker)
+        assertEquals(worker, dispatcher.dispatch(taskId))
+    }
+
+    @Test
+    fun `register with REPLACE on free ID stores worker`() {
+        val taskId = ITask.ID("TestTask", setOf("prop1"))
+        dispatcher.register(taskId, worker, RegisterMode.REPLACE)
         assertEquals(worker, dispatcher.dispatch(taskId))
     }
 
