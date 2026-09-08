@@ -5,7 +5,7 @@
 Annotation-driven task dispatching and licensed worker management for Kotlin analysis and interpretation systems.
 
 [![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
-![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-1.8%2B-blue?logo=kotlin)
+![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-21%2B-blue?logo=kotlin)
 [![JitPack](https://jitpack.io/v/jhu-seclab-cobra/framework.svg)](https://jitpack.io/#jhu-seclab-cobra/framework)
 [![license](https://img.shields.io/github/license/jhu-seclab-cobra/framework)](./LICENSE)
 
@@ -36,9 +36,9 @@ class ExprWorkshop : AbcWorkshop<IWorker<ExprTask, ExprResult>>() {
     val binary = IWorker<ExprTask, ExprResult> { task -> eval(task.node) }
 }
 
-// 3. Discover and dispatch
-val workers = ExprWorkshop().licensedWorkers()
-dispatcher.register(workers)
+// 3. Register and dispatch
+val dispatcher = AbcDispatcher<ExprTask, ExprResult>()
+ExprWorkshop().registerTo(dispatcher)
 val worker = dispatcher.dispatch(task.uid)
 ```
 
@@ -46,9 +46,11 @@ val worker = dispatcher.dispatch(task.uid)
 
 **`IWorker<T : ITask, R>`** — Performs a task, returns result via `fun work(task: T): R`. Synchronous `fun interface`.
 
-**`IDispatcher<W>`** — `dispatch(forTask: ITask.ID): W?` and `register(forTask: ITask.ID, toWorker: W)`.
+**`IDispatcher<W>`** — `dispatch(forTask: ITask.ID): W?` and `register(forTask: ITask.ID, toWorker: W, mode: RegisterMode = ATTACH)`.
 
-**`AbcWorkshop<W>`** — `licensedWorkers(): Map<ITask.ID, W>` discovers `@WorkLicense`-annotated properties via reflection.
+**`AbcDispatcher<T, R>`** — Map-backed `IDispatcher`. `RegisterMode.REPLACE` overwrites; `RegisterMode.ATTACH` chains workers in registration order.
+
+**`AbcWorkshop<W>`** — `licensedWorkers(): Map<ITask.ID, W>` discovers `@WorkLicense`-annotated properties via reflection; `registerTo(dispatcher)` registers them.
 
 **`@WorkLicense`** — Meta-annotation applied to custom annotation classes. Properties of the custom annotation become part of `ITask.ID`.
 
@@ -56,8 +58,8 @@ val worker = dispatcher.dispatch(task.uid)
 
 ## Documentation
 
-- [Concepts and terminology](docs/idea.md) — interpreter pattern, workshop model, licensing mechanism.
-- [Design specification](docs/design.md) — class specifications, validation rules, exception types.
+- [Concepts and terminology](docs/concept.md) — task, worker, dispatcher, registration mode, workshop, and license concepts.
+- [Design specification](docs/design.md) — class specifications, function specifications, exception types.
 
 ## For Agents
 
@@ -79,4 +81,4 @@ If you use this repository in your research, please cite our paper:
 
 ## License
 
-GPL-2.0
+[GPL-2.0](LICENSE)

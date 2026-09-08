@@ -12,48 +12,61 @@ annotation class MyLicense(val name: String)
 
 class MyWorkshop : AbcWorkshop<IWorker<MyTask, Boolean>>() {
     @MyLicense("greet")
-    val greeter = IWorker<MyTask, Boolean> { task -> true }
+    val greeter = IWorker<MyTask, Boolean> { true }
 }
 
-val workers = MyWorkshop().licensedWorkers()
+val dispatcher = AbcDispatcher<MyTask, Boolean>()
+MyWorkshop().registerTo(dispatcher)
+val worker = dispatcher.dispatch(WorkLicense.getTaskID(MyLicense::class.java, "greet"))
 ```
 
 ## API
 
 **`ITask`** — Unit of work with `uid: ITask.ID`.
 
-**`ITask.ID(license: String, props: Set<String>)`** — Dispatch key. Constructed via `WorkLicense.getTaskID()`.
+**`ITask.ID(license: String, props: Set<String>)`** — Dispatch key. Structural equality, case-sensitive.
 
 **`IWorker<T : ITask, R>`** — Processes a task, returns a result. `fun interface`.
 
 **`fun work(task: T): R`** — Synchronous. Result type `R` determined by caller.
 
-**`IDispatcher<Worker : IWorker<*, *>>`** — Routes tasks to workers.
+**`RegisterMode`** — `REPLACE` overwrites an existing registration; `ATTACH` chains after it.
 
-**`fun dispatch(forTask: ITask.ID): Worker?`** — Returns registered worker or null.
+**`IDispatcher<W : IWorker<*, *>>`** — Routes tasks to workers.
 
-**`fun register(forTask: ITask.ID, toWorker: Worker)`** — Binds worker to task ID.
+**`fun dispatch(forTask: ITask.ID): W?`** — Returns registered worker or null.
+
+**`fun register(forTask: ITask.ID, toWorker: W, mode: RegisterMode = ATTACH)`** — Binds worker to task ID per `mode`.
+
+**`AbcDispatcher<T : ITask, R>()`** — Map-backed `IDispatcher<IWorker<T, R>>`. `ATTACH` runs existing then new worker and returns the new worker's result.
 
 **`AbcWorkshop<W : IWorker<*, *>>`** — Groups workers; discovers via reflection.
 
-**`fun licensedWorkers(): Map<ITask.ID, W>`** — Scans `@WorkLicense`-annotated properties.
+**`fun licensedWorkers(): Map<ITask.ID, W>`** — Scans `@WorkLicense`-annotated properties. Raises `IllegalStateException` when a licensed property is null.
+
+**`fun registerTo(dispatcher: IDispatcher<W>)`** — Registers every licensed worker, one registration per license annotation, with the annotation's `RegisterMode`.
 
 **`@WorkLicense`** — Meta-annotation for custom license annotation classes.
 
-**`WorkLicense.getTaskID(annotation: Annotation): ITask.ID`** — Extracts ID from annotation instance.
+**`WorkLicense.getTaskID(annotation: Annotation): ITask.ID`** — Extracts ID from annotation instance; `RegisterMode`-typed properties excluded. Raises `IllegalStateException` when the annotation class has no primary constructor.
 
 **`WorkLicense.getTaskID(cls: Class<*>, vararg props: String): ITask.ID`** — Constructs ID from class + props.
+
+**`WorkLicense.getTaskID(cls: Class<*>, props: Collection<String>): ITask.ID`** — Constructs ID from class + props collection.
 
 **`WorkLicense.isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean`** — Checks ID matches license class.
 
 ## Configuration
 
-No configuration required. Behavior driven by annotations and registration calls.
+- None. Behavior driven by annotations and `register` calls.
 
 ## Gotchas
 
-- `@WorkLicense` targets `ANNOTATION_CLASS`, not `PROPERTY`. Applying directly to a worker property has no effect.
-- `licensedWorkers()` uses `kotlin-reflect`. The `kotlin-reflect` artifact must be on the classpath.
-- `licensedWorkers()` reads `declaredMemberProperties` — inherited properties not discovered.
-- `ITask.ID.license` stores `Class.simpleName`. Same simple name in different packages → identical license.
+- `@WorkLicense` targets `ANNOTATION_CLASS`. Applying it to a property is a compile error.
+- `licensedWorkers()` and `registerTo()` use `kotlin-reflect`. The `kotlin-reflect` artifact must be on the classpath.
+- `licensedWorkers()` reads `declaredMemberProperties`; inherited properties are not discovered.
+- `ITask.ID.license` stores `Class.name` (fully qualified). Same simple name in different packages → distinct licenses.
+- Default `register` mode is `ATTACH`: registering the same `ITask.ID` twice runs both workers. Pass `RegisterMode.REPLACE` to overwrite.
+- `licensedWorkers()` keeps the last property for a duplicate `ITask.ID`; `registerTo()` applies the dispatcher's `RegisterMode` instead.
+- `AbcDispatcher` is not thread-safe.
 - `IWorker.work` is synchronous. Callers manage concurrency (coroutines, thread pools).

@@ -7,6 +7,8 @@
 - **Abstract**: `IWorker` (implemented by concrete workers), `IDispatcher` (implemented by `AbcDispatcher`), `AbcWorkshop` (subclassed per worker group)
 - **Exceptions**: None defined. Null return from `IDispatcher.dispatch` signals missing registration. `IllegalStateException` for reflection contract violations.
 - **Dependency roles**: Data holders: `ITask.ID`, `ITask`. Router: `IDispatcher` / `AbcDispatcher`. Discovery: `AbcWorkshop`. Metadata: `WorkLicense`, `RegisterMode`.
+- **Visibility**: All types public (`explicitApi()`), package `edu.jhu.cobra.framework`, module `framework`.
+- **Named values**: None introduced.
 
 ## Class / Type Specifications
 
@@ -29,11 +31,13 @@
 
 **Methods:** Data class defaults (`equals`, `hashCode`, `toString`, `copy`). Structural equality. Case-sensitive.
 
+**Input:** No constraints on `license` or `props` values; empty strings and empty sets are valid.
+
 ---
 
 ### `IWorker<T : ITask, R>`
 
-**Responsibility:** Processes a task and returns a result. Synchronous.
+**Responsibility:** Processes a task and returns a result. Synchronous; concurrency is managed by the caller, not the framework.
 
 **State:** None defined by the interface. Implementations may capture state via closure.
 
@@ -47,18 +51,18 @@
 
 ---
 
-### `IDispatcher<Worker : IWorker<*, *>>`
+### `IDispatcher<W : IWorker<*, *>>`
 
 **Responsibility:** Registry mapping Task IDs to workers.
 
-**State:** Implementation-defined (typically `Map<ITask.ID, Worker>`).
+**State:** None defined by the interface.
 
 **Methods:**
 
 | Method | Behavior | Input | Output |
 |--------|----------|-------|--------|
-| `dispatch(forTask: ITask.ID)` | Returns registered worker or null. | `forTask: ITask.ID` | `Worker?` |
-| `register(forTask: ITask.ID, toWorker: Worker, mode: RegisterMode = ATTACH)` | Associates worker with Task ID per `mode`. | `forTask`, `toWorker`, `mode` | Unit |
+| `dispatch(forTask: ITask.ID)` | Returns registered worker or null. | `forTask: ITask.ID` | `W?` |
+| `register(forTask: ITask.ID, toWorker: W, mode: RegisterMode = ATTACH)` | Associates worker with Task ID per `mode`. Omitted `mode` is `ATTACH`. | `forTask`, `toWorker`, `mode` | Unit |
 
 ---
 
@@ -143,6 +147,8 @@ Mode extraction (`registerTo`):
 
 **Responsibility:** Constructs Task ID from class and property strings.
 
+**Input:** `cls` -- license class; `props` -- zero or more property strings, deduplicated into a set.
+
 **Output:** `ITask.ID(cls.name, props.toSet())`.
 
 ---
@@ -151,6 +157,8 @@ Mode extraction (`registerTo`):
 
 **Responsibility:** Constructs Task ID from class and collection of property strings.
 
+**Input:** `cls` -- license class; `props` -- property strings, deduplicated into a set.
+
 **Output:** `ITask.ID(cls.name, props.toSet())`.
 
 ---
@@ -158,6 +166,8 @@ Mode extraction (`registerTo`):
 ### `WorkLicense.Companion.isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean`
 
 **Responsibility:** Checks whether Task ID license matches a given class.
+
+**Input:** `taskID` -- the ID under test; `forLicense` -- the license class.
 
 **Output:** `taskID.license == forLicense.name`.
 
@@ -169,10 +179,3 @@ No custom exceptions. Error conditions:
 - `AbcWorkshop.licensedWorkers` / `registerTo` throw `IllegalStateException` for a licensed property whose value is null, naming the workshop class and property.
 - `AbcWorkshop.registerTo` throws `IllegalStateException` when a `RegisterMode`-typed annotation property holds a non-`RegisterMode` value.
 
-## Validation Rules
-
-- `ITask.ID`: No constraints on `license` or `props` values.
-- `IDispatcher.register`: Duplicate registrations follow `RegisterMode` -- `REPLACE` overwrites, `ATTACH` chains.
-- `AbcWorkshop.licensedWorkers`: Null-valued licensed property is a wiring bug — `IllegalStateException`, never a silent skip or a null map value.
-- `WorkLicense` target restricted to `ANNOTATION_CLASS`.
-- `IWorker.work` is synchronous. Concurrency managed by the caller, not the framework.
