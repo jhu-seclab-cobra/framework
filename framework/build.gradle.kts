@@ -17,9 +17,13 @@ val jvmVersion =
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
+    // Re-exported on purpose: a consumer depends on framework alone and
+    // receives the commons-graph API without a second import.
+    api(libs.cobra.commons.graph)
     implementation(libs.kotlin.reflect)
     testImplementation(kotlin("test"))
 }

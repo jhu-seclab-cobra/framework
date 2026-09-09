@@ -11,6 +11,7 @@
 ## Libraries
 
 - `org.jetbrains.kotlin:kotlin-reflect` (version.ref `kotlin`, alias `libs.kotlin.reflect`) -- runtime reflection for annotation and property discovery.
+- `com.github.jhu-seclab-cobra.commons-graph:graph` (version.ref `cobra`, alias `libs.cobra.commons.graph`) -- `api` scope by design: framework re-exports the graph API so a consumer declares framework alone. Framework sources import nothing from it; the dependency is not unused.
 
 ## Developer Instructions
 
