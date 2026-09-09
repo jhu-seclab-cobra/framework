@@ -4,10 +4,8 @@ plugins {
 
 rootProject.name = "framework"
 
-// No vendored checkouts. Standalone builds resolve commons-graph and
-// commons-value from JitPack at the versions in gradle/libs.versions.toml.
-// Under the CobraPHP composite, the root substitutes them with its own
-// vendored builds.
+// No COBRA sibling dependencies: the framework depends only on the Kotlin
+// standard library and kotlin-reflect.
 
 include("jhu-seclab-cobra-framework")
 project(":jhu-seclab-cobra-framework").projectDir = file("framework")

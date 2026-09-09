@@ -17,11 +17,9 @@ val jvmVersion =
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    api(libs.cobra.commons.graph)
     implementation(libs.kotlin.reflect)
     testImplementation(kotlin("test"))
 }

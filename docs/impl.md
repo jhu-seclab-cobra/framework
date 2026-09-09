@@ -11,7 +11,6 @@
 ## Libraries
 
 - `org.jetbrains.kotlin:kotlin-reflect` (version.ref `kotlin`, alias `libs.kotlin.reflect`) -- runtime reflection for annotation and property discovery.
-- `com.github.jhu-seclab-cobra.commons-graph:graph` (version.ref `cobra`, alias `libs.cobra.commons.graph`) -- declared with `api` scope; exposed to consumers.
 
 ## Developer Instructions
 
