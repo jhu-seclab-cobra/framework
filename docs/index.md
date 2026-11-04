@@ -2,6 +2,7 @@
 
 | File | Content |
 |------|---------|
+| glossary/glossary.md | Glossary: tasks, workers, workshops and the dispatcher |
 | concept.md | Task, Task ID, Worker, Dispatcher, Registration Mode, Workshop, WorkLicense concepts |
 | design.md | Type and function specifications for dispatcher, workshop, and license API |
 | impl.md | kotlin-reflect API findings, dependencies, developer instructions |
