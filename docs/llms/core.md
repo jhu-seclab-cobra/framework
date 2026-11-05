@@ -52,8 +52,6 @@ val worker = dispatcher.dispatch(WorkLicense.getTaskID(MyLicense::class.java, "g
 
 **`WorkLicense.getTaskID(cls: Class<*>, vararg props: String): ITask.ID`** — Constructs ID from class + props.
 
-**`WorkLicense.getTaskID(cls: Class<*>, props: Collection<String>): ITask.ID`** — Constructs ID from class + props collection.
-
 **`WorkLicense.isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean`** — Checks ID matches license class.
 
 ## Configuration

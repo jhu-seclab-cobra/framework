@@ -153,16 +153,6 @@ Mode extraction (`registerTo`):
 
 ---
 
-### `WorkLicense.Companion.getTaskID(cls: Class<*>, props: Collection<String>): ITask.ID`
-
-**Responsibility:** Constructs Task ID from class and collection of property strings.
-
-**Input:** `cls` -- license class; `props` -- property strings, deduplicated into a set.
-
-**Output:** `ITask.ID(cls.name, props.toSet())`.
-
----
-
 ### `WorkLicense.Companion.isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean`
 
 **Responsibility:** Checks whether Task ID license matches a given class.

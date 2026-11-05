@@ -43,7 +43,7 @@ public fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
         annotatedProps
             .filterNot { prop -> prop.returnType.classifier == RegisterMode::class }
             .map { prop -> prop.call(annotation).toString() }
-    return WorkLicense.getTaskID(annoCls.java, innerStr)
+    return WorkLicense.getTaskID(annoCls.java, *innerStr.toTypedArray())
 }
 
 /**
@@ -52,14 +52,6 @@ public fun WorkLicense.Companion.getTaskID(annotation: Annotation): ITask.ID {
 public fun WorkLicense.Companion.getTaskID(
     cls: Class<*>,
     vararg props: String,
-): ITask.ID = ITask.ID(cls.name, props.toSet())
-
-/**
- * Constructs a task ID from a class and a collection of property strings.
- */
-public fun WorkLicense.Companion.getTaskID(
-    cls: Class<*>,
-    props: Collection<String>,
 ): ITask.ID = ITask.ID(cls.name, props.toSet())
 
 /**

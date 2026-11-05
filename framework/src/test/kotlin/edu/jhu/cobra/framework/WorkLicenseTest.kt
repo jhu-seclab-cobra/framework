@@ -5,8 +5,6 @@
  * - `getTaskID from class with empty props`: zero-arg construction
  * - `getTaskID from class with props`: multi-arg construction
  * - `getTaskID from class deduplicates vararg props`: props form a set
- * - `getTaskID from class and collection`: collection overload
- * - `getTaskID from class and collection deduplicates props`: props form a set
  * - `getTaskID from annotation instance extracts parameters`: reflection-based extraction
  * - `getTaskID from annotation excludes RegisterMode properties`: mode is registration metadata, not a discriminant
  * - `getTaskID from annotation equals ID built from class and props`: both constructions agree
@@ -45,18 +43,6 @@ internal class WorkLicenseTest {
     @Test
     fun `getTaskID from class deduplicates vararg props`() {
         val id = WorkLicense.getTaskID(TestTask::class.java, "a", "a")
-        assertEquals(setOf("a"), id.props)
-    }
-
-    @Test
-    fun `getTaskID from class and collection`() {
-        val id = WorkLicense.getTaskID(TestTask::class.java, listOf("a", "b"))
-        assertEquals(ITask.ID("edu.jhu.cobra.framework.TestTask", setOf("a", "b")), id)
-    }
-
-    @Test
-    fun `getTaskID from class and collection deduplicates props`() {
-        val id = WorkLicense.getTaskID(TestTask::class.java, listOf("a", "a"))
         assertEquals(setOf("a"), id.props)
     }
 
