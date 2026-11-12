@@ -1,4 +1,4 @@
-# COBRA Framework
+# framework
 
 [![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
 ![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-2.4.20%20%7C%20JVM%2021%2B-blue?logo=kotlin)
@@ -14,6 +14,8 @@ Annotation-driven task dispatching and licensed worker management for Kotlin ana
 
 ## Install
 
+Use JDK 21 and a Gradle Kotlin/JVM build with JitPack configured:
+
 ```kotlin
 repositories {
     maven { url = uri("https://jitpack.io") }
@@ -27,50 +29,24 @@ dependencies {
 ## Usage
 
 ```kotlin
-// 1. Define a license annotation
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.RUNTIME)
-@WorkLicense
-annotation class NodeLicense(val type: String)
+import edu.jhu.cobra.framework.AbcDispatcher
+import edu.jhu.cobra.framework.ITask
+import edu.jhu.cobra.framework.IWorker
 
-// 2. Group workers in a workshop
-class ExprWorkshop : AbcWorkshop<IWorker<ExprTask, ExprResult>>() {
-    @NodeLicense("BinaryExpr")
-    val binary = IWorker<ExprTask, ExprResult> { task -> eval(task.node) }
-}
-
-// 3. Register and dispatch
-val dispatcher = AbcDispatcher<ExprTask, ExprResult>()
-ExprWorkshop().registerTo(dispatcher)
-val worker = dispatcher.dispatch(task.uid)
+data class ExampleTask(override val uid: ITask.ID) : ITask
+val task = ExampleTask(ITask.ID("example", emptySet()))
+val dispatcher = AbcDispatcher<ExampleTask, Boolean>()
+dispatcher.register(task.uid, IWorker { true })
+check(checkNotNull(dispatcher.dispatch(task.uid)).work(task))
 ```
 
 ## API
 
-**`IWorker<T : ITask, R>`** — Performs a task, returns result via `fun work(task: T): R`. Synchronous `fun interface`.
-
-**`IDispatcher<W>`** — `dispatch(forTask: ITask.ID): W?` and `register(forTask: ITask.ID, toWorker: W, mode: RegisterMode = ATTACH)`.
-
-**`AbcDispatcher<T, R>`** — Map-backed `IDispatcher`. `RegisterMode.REPLACE` overwrites; `RegisterMode.ATTACH` chains workers in registration order.
-
-**`AbcWorkshop<W>`** — `licensedWorkers(): Map<ITask.ID, W>` discovers `@WorkLicense`-annotated properties via reflection; `registerTo(dispatcher)` registers them.
-
-**`@WorkLicense`** — Meta-annotation applied to custom annotation classes. Properties of the custom annotation become part of `ITask.ID`.
-
-**`ITask.ID(license: String, props: Set<String>)`** — Task identifier. Constructed via `WorkLicense.getTaskID()`.
-
-## Documentation
-
-- [Concepts and terminology](docs/concept.md) — task, worker, dispatcher, registration mode, workshop, and license concepts.
-- [Design specification](docs/design.md) — class specifications, function specifications, exception types.
-
-## For Agents
-
-Agent-consumable documentation index at `docs/llms.txt` ([llmstxt.org](https://llmstxt.org) format).
+[Core API](docs/llms/core.md) lists the exported Task, Worker, Workshop, Dispatcher and annotation signatures.
 
 ## Citation
 
-If you use this repository in your research, please cite our paper:
+It requests that every project using the library cite the project’s associated paper:
 
 ```bibtex
 @inproceedings{xu2026cobra,
@@ -81,6 +57,15 @@ If you use this repository in your research, please cite our paper:
   address   = {Rio de Janeiro, Brazil}
 }
 ```
+
+## Documentation
+
+- [Concepts and terminology](docs/concept.md) — Task, Worker, Dispatcher, Registration Mode, Workshop and license roles.
+- [Design specification](docs/design.md) — class specifications, function specifications, exception types.
+
+## For Agents
+
+Agent-consumable documentation index at `docs/llms.txt` ([llmstxt.org](https://llmstxt.org) format).
 
 ## License
 

@@ -1,8 +1,6 @@
-# COBRA Framework
+# framework
 
 > Task dispatch, worker registration, and annotation-based discovery for interpreter and analysis systems.
-
-Kotlin library providing `ITask`, `IWorker`, `IDispatcher`/`AbcDispatcher`, `AbcWorkshop`, and `WorkLicense`. Workshops group workers and expose them through annotation-based licensing; dispatchers route tasks to registered workers by `ITask.ID`. Workers process tasks and return results synchronously.
 
 ## Instructions for Agents
 
@@ -11,7 +9,7 @@ Kotlin library providing `ITask`, `IWorker`, `IDispatcher`/`AbcDispatcher`, `Abc
 - Use `AbcDispatcher<T, R>` as the dispatcher; implement `IDispatcher<W>` only for a non-map registry.
 - Implement `IWorker<T, R>` with `fun work(task: T): R`. Manage concurrency in the caller.
 - Pass `RegisterMode.REPLACE` to `register` to overwrite; omit `mode` to chain (`ATTACH`).
-- Declare a `RegisterMode`-typed property on the license annotation to set the mode used by `registerTo`.
+- Declare at most one `RegisterMode`-typed property on a license annotation.
 - Use `WorkLicense.getTaskID(annotation)` to extract `ITask.ID` from a `@WorkLicense`-annotated annotation instance.
 - Never apply `@WorkLicense` to a property; apply it to the custom annotation class.
 - Never leave a licensed worker property null; discovery throws `IllegalStateException`.
@@ -20,84 +18,82 @@ Kotlin library providing `ITask`, `IWorker`, `IDispatcher`/`AbcDispatcher`, `Abc
 
 - [Core](llms/core.md): `ITask`, `IWorker`, `IDispatcher`, `RegisterMode`, `AbcDispatcher`, `AbcWorkshop`, `WorkLicense`.
 
+## Optional
 
----
-
-# Referenced Documents
-
-## Source: llms/core.md
-
+- [Documentation index](index.md): Concepts, type contracts and external API notes.
+- [API page index](llms/index.md): Core API page and generated aggregate.
 # Core
 
-> Task dispatch, worker execution, and annotation-based licensing.
+> Task dispatch, Worker execution, and annotation-based licensing.
 
 ## Quick Start
 
 ```kotlin
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.RUNTIME)
-@WorkLicense
-annotation class MyLicense(val name: String)
+import edu.jhu.cobra.framework.AbcDispatcher
+import edu.jhu.cobra.framework.ITask
+import edu.jhu.cobra.framework.IWorker
 
-class MyWorkshop : AbcWorkshop<IWorker<MyTask, Boolean>>() {
-    @MyLicense("greet")
-    val greeter = IWorker<MyTask, Boolean> { true }
-}
-
-val dispatcher = AbcDispatcher<MyTask, Boolean>()
-MyWorkshop().registerTo(dispatcher)
-val worker = dispatcher.dispatch(WorkLicense.getTaskID(MyLicense::class.java, "greet"))
+data class ExampleTask(override val uid: ITask.ID) : ITask
+val task = ExampleTask(ITask.ID("example", emptySet()))
+val dispatcher = AbcDispatcher<ExampleTask, Boolean>()
+dispatcher.register(task.uid, IWorker { true })
+check(checkNotNull(dispatcher.dispatch(task.uid)).work(task))
 ```
 
 ## API
 
-**`ITask`** — Unit of work with `uid: ITask.ID`.
+- **`ITask`** — Unit of work with `uid: ITask.ID`.
 
-**`ITask.ID(license: String, props: Set<String>)`** — Dispatch key. Structural equality, case-sensitive.
+- **`ITask.ID(license: String, props: Set<String>)`** — Dispatch key. Structural equality, case-sensitive.
 
-**`IWorker<T : ITask, R>`** — Processes a task, returns a result. `fun interface`.
+- **`IWorker<T : ITask, R>`** — Processes a Task, returns a result. `fun interface`.
 
-**`fun work(task: T): R`** — Synchronous. Result type `R` determined by caller.
+- **`IWorker<T, R>.work(task: T): R`** — Synchronous. Result type `R` determined by caller.
 
-**`RegisterMode`** — `REPLACE` overwrites an existing registration; `ATTACH` chains after it.
+- **`RegisterMode`** — `REPLACE` overwrites an existing registration; `ATTACH` chains after it.
 
-**`IDispatcher<W : IWorker<*, *>>`** — Routes tasks to workers.
+- **`IDispatcher<W : IWorker<*, *>>`** — Routes Tasks to Workers.
 
-**`fun dispatch(forTask: ITask.ID): W?`** — Returns registered worker or null.
+- **`IDispatcher<W>.dispatch(forTask: ITask.ID): W?`** — Returns registered Worker or null.
 
-**`fun register(forTask: ITask.ID, toWorker: W, mode: RegisterMode = ATTACH)`** — Binds worker to task ID per `mode`.
+- **`IDispatcher<W>.register(forTask: ITask.ID, toWorker: W, mode: RegisterMode = ATTACH): Unit`** — Binds Worker to Task ID per `mode`.
 
-**`AbcDispatcher<T : ITask, R>()`** — Map-backed `IDispatcher<IWorker<T, R>>`. `ATTACH` runs existing then new worker and returns the new worker's result.
+- **`AbcDispatcher<T : ITask, R>()`** — `IDispatcher<IWorker<T, R>>` implementation. `ATTACH` runs existing then new Worker and returns the new Worker's result.
 
-**`AbcWorkshop<W : IWorker<*, *>>`** — Groups workers; discovers via reflection.
+- **`AbcWorkshop<W : IWorker<*, *>>`** — Groups licensed Workers for registration.
 
-**`fun licensedWorkers(): Map<ITask.ID, W>`** — Scans `@WorkLicense`-annotated properties. Raises `IllegalStateException` when a licensed property is null.
+- **`AbcWorkshop<W>.licensedWorkers(): Map<ITask.ID, W>`** — Returns the licensed Workers. Raises `IllegalStateException` when a licensed property is null.
 
-**`fun registerTo(dispatcher: IDispatcher<W>)`** — Registers every licensed worker, one registration per license annotation, with the annotation's `RegisterMode`.
+- **`AbcWorkshop<W>.registerTo(dispatcher: IDispatcher<W>): Unit`** — Registers every licensed Worker, one registration per license annotation, with the annotation's `RegisterMode`.
 
-**`@WorkLicense`** — Meta-annotation for custom license annotation classes.
+- **`@WorkLicense`** — Meta-annotation for custom license annotation classes.
 
-**`WorkLicense.getTaskID(annotation: Annotation): ITask.ID`** — Extracts ID from annotation instance; `RegisterMode`-typed properties excluded. Raises `IllegalStateException` when the annotation class has no primary constructor.
+- **`WorkLicense.getTaskID(annotation: Annotation): ITask.ID`** — Extracts ID from annotation instance; `RegisterMode`-typed properties excluded. Raises `IllegalStateException` when the annotation class has no primary constructor.
 
-**`WorkLicense.getTaskID(cls: Class<*>, vararg props: String): ITask.ID`** — Constructs ID from class + props.
+- **`WorkLicense.getTaskID(cls: Class<*>, vararg props: String): ITask.ID`** — Constructs ID from class + props.
 
-**`WorkLicense.isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean`** — Checks ID matches license class.
+- **`WorkLicense.isTaskID(taskID: ITask.ID, forLicense: Class<*>): Boolean`** — Checks ID matches license class.
 
 ## Configuration
 
-- None. Behavior driven by annotations and `register` calls.
+- Select registration behavior with `RegisterMode.REPLACE` or the default `ATTACH`.
+- Declare at most one `RegisterMode` property on a custom license annotation; `registerTo` defaults to `ATTACH` when none is declared.
+- Import `edu.jhu.cobra.framework.getTaskID` and `edu.jhu.cobra.framework.isTaskID` to call the `WorkLicense` companion extensions.
 
 ## Gotchas
 
 - `@WorkLicense` targets `ANNOTATION_CLASS`. Applying it to a property is a compile error.
 - `licensedWorkers()` and `registerTo()` use `kotlin-reflect`. The `kotlin-reflect` artifact must be on the classpath.
 - `licensedWorkers()` reads `declaredMemberProperties`; inherited properties are not discovered.
-- `ITask.ID.license` stores `Class.name` (fully qualified). Same simple name in different packages → distinct licenses.
-- Default `register` mode is `ATTACH`: registering the same `ITask.ID` twice runs both workers. Pass `RegisterMode.REPLACE` to overwrite.
-- `licensedWorkers()` keeps the last property for a duplicate `ITask.ID`; `registerTo()` applies the dispatcher's `RegisterMode` instead.
-- `AbcDispatcher` is not thread-safe.
+- `ITask.ID` is a reusable dispatch key, not a Task-instance identifier; `license` stores `Class.name`, so equal simple class names in different packages remain distinct.
+- Default `register` mode is `ATTACH`: registering the same `ITask.ID` twice runs both Workers. Pass `RegisterMode.REPLACE` to overwrite.
+- `licensedWorkers()` keeps the last reflected property for a duplicate key; `registerTo()` applies Registration Mode in reflection iteration order, with no source declaration order guarantee.
+- `AbcDispatcher` is not thread-safe; synchronize shared use in the caller.
+- An annotation with several `RegisterMode` properties violates the input contract; current discovery does not reject it, so never depend on which property it selects.
 - `IWorker.work` is synchronous. Callers manage concurrency (coroutines, thread pools).
+# framework API pages — caller contracts
 
-
----
-
+| File | Content |
+|---|---|
+| [core.md](core.md) | Core API signatures, configuration and caller constraints |
+| [full.txt](full.txt) | Aggregate of the entry point and API pages |

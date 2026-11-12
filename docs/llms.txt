@@ -1,8 +1,6 @@
-# COBRA Framework
+# framework
 
 > Task dispatch, worker registration, and annotation-based discovery for interpreter and analysis systems.
-
-Kotlin library providing `ITask`, `IWorker`, `IDispatcher`/`AbcDispatcher`, `AbcWorkshop`, and `WorkLicense`. Workshops group workers and expose them through annotation-based licensing; dispatchers route tasks to registered workers by `ITask.ID`. Workers process tasks and return results synchronously.
 
 ## Instructions for Agents
 
@@ -11,7 +9,7 @@ Kotlin library providing `ITask`, `IWorker`, `IDispatcher`/`AbcDispatcher`, `Abc
 - Use `AbcDispatcher<T, R>` as the dispatcher; implement `IDispatcher<W>` only for a non-map registry.
 - Implement `IWorker<T, R>` with `fun work(task: T): R`. Manage concurrency in the caller.
 - Pass `RegisterMode.REPLACE` to `register` to overwrite; omit `mode` to chain (`ATTACH`).
-- Declare a `RegisterMode`-typed property on the license annotation to set the mode used by `registerTo`.
+- Declare at most one `RegisterMode`-typed property on a license annotation.
 - Use `WorkLicense.getTaskID(annotation)` to extract `ITask.ID` from a `@WorkLicense`-annotated annotation instance.
 - Never apply `@WorkLicense` to a property; apply it to the custom annotation class.
 - Never leave a licensed worker property null; discovery throws `IllegalStateException`.
@@ -19,3 +17,8 @@ Kotlin library providing `ITask`, `IWorker`, `IDispatcher`/`AbcDispatcher`, `Abc
 ## Core API
 
 - [Core](llms/core.md): `ITask`, `IWorker`, `IDispatcher`, `RegisterMode`, `AbcDispatcher`, `AbcWorkshop`, `WorkLicense`.
+
+## Optional
+
+- [Documentation index](index.md): Concepts, type contracts and external API notes.
+- [API page index](llms/index.md): Core API page and generated aggregate.

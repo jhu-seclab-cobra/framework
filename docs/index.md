@@ -1,9 +1,10 @@
-# COBRA Framework — task dispatch, worker licensing, and workshop discovery
+# framework — Task dispatch documentation
 
 | File | Content |
-|------|---------|
-| glossary/glossary.md | Glossary: tasks, workers, workshops and the dispatcher |
-| concept.md | Task, Task ID, Worker, Dispatcher, Registration Mode, Workshop, WorkLicense concepts |
-| design.md | Type and function specifications for dispatcher, workshop, and license API |
-| impl.md | kotlin-reflect API findings, dependencies, developer instructions |
-| llms.txt | Agent-facing documentation index (llmstxt.org); links `llms/*.md` |
+|---|---|
+| [concept.md](concept.md) | Task, Worker, Workshop and Dispatcher roles |
+| [design.md](design.md) | Public type, dispatch and license contracts |
+| [impl.md](impl.md) | Reflection API findings and build dependencies |
+| [glossary/index.md](glossary/index.md) | Established terms and entry files |
+| [llms.txt](llms.txt) | Agent-facing documentation entry point |
+| [llms/index.md](llms/index.md) | Core API page and generated aggregate |
