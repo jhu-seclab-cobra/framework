@@ -1,13 +1,16 @@
 # COBRA Framework
 
+[![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
+![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-2.4.20%20%7C%20JVM%2021%2B-blue?logo=kotlin)
+[![Release](https://img.shields.io/badge/release-v0.1.0-blue.svg)](https://github.com/jhu-seclab-cobra/framework/releases/tag/v0.1.0)
+[![last commit](https://img.shields.io/github/last-commit/jhu-seclab-cobra/framework)](https://github.com/jhu-seclab-cobra/framework/commits/main)
+[![JitPack](https://jitpack.io/v/jhu-seclab-cobra/framework.svg)](https://jitpack.io/#jhu-seclab-cobra/framework)
+![Repo Size](https://img.shields.io/github/repo-size/jhu-seclab-cobra/framework)
+[![license](https://img.shields.io/github/license/jhu-seclab-cobra/framework)](./LICENSE)
+
 > Named for the COBRA static analysis platform — the foundational dispatch layer that coordinates analysis workers.
 
 Annotation-driven task dispatching and licensed worker management for Kotlin analysis and interpretation systems.
-
-[![codecov](https://codecov.io/gh/jhu-seclab-cobra/framework/branch/main/graph/badge.svg)](https://codecov.io/gh/jhu-seclab-cobra/framework)
-![Kotlin JVM](https://img.shields.io/badge/Kotlin%20JVM-21%2B-blue?logo=kotlin)
-[![JitPack](https://jitpack.io/v/jhu-seclab-cobra/framework.svg)](https://jitpack.io/#jhu-seclab-cobra/framework)
-[![license](https://img.shields.io/github/license/jhu-seclab-cobra/framework)](./LICENSE)
 
 ## Install
 
