@@ -15,15 +15,7 @@
 
 ## Developer Instructions
 
-- Custom license annotations: `@WorkLicense` meta-annotation + `@Retention(RUNTIME)` + `@Target(PROPERTY)`.
-- License annotation constructor parameters → `props` set of `ITask.ID`; values converted with `toString()`.
-- License annotation fully qualified class name (`Class.name`) → `license` field of `ITask.ID`.
-- A `RegisterMode`-typed annotation property is excluded from `props` and selects the mode in `AbcWorkshop.registerTo`; absent → `ATTACH`.
-- `licensedWorkers()` scans `declaredMemberProperties` only. Inherited workers not discovered.
-- Duplicate Task IDs within one workshop: `licensedWorkers()` keeps the last property in reflection order; `registerTo` applies the dispatcher's `RegisterMode`.
-- `AbcDispatcher` is not synchronized. Callers sharing a dispatcher across threads manage synchronization.
-- `ITask.ID` equality: structural, case-sensitive. `"Expr"` ≠ `"expr"`.
-- `IWorker` is a `fun interface`: `IWorker<T, R> { task -> result }` via SAM syntax.
-- `IWorker.work` is synchronous. Concurrency (coroutines, thread pools) managed by the caller.
-- Build: `./gradlew build`. Test: `./gradlew test`. Gate: `./gradlew detekt ktlintCheck build`.
-- Published via JitPack: `com.github.jhu-seclab-cobra:framework:0.1.0`.
+- Custom license annotation setup: `@WorkLicense` + `@Retention(RUNTIME)` + `@Target(PROPERTY)`.
+- Discovery, dispatch keys, duplicate registrations, concurrency and Registration Mode follow the [design](design.md).
+- Build: `./gradlew build`. Test: `./gradlew test`. Quality commands: `./gradlew detekt ktlintCheck build`.
+- Published through JitPack: `com.github.jhu-seclab-cobra:framework:0.1.0`.
