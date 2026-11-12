@@ -10,4 +10,8 @@ Source locations are relative to `framework/src/main/kotlin/edu/jhu/cobra/framew
 
 | File | Concern |
 |------|---------|
-| [glossary-dispatch.md](glossary-dispatch.md) | Tasks, workers, workshops and the dispatcher |
+| [glossary-dispatch.md](glossary-dispatch.md) | Task, Worker, Workshop, Dispatcher and Registration Mode |
+
+## Retired Names
+
+[Retired names and successors](glossary-retired.md).
