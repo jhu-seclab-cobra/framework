@@ -4,7 +4,6 @@ kover = "0.9.9"
 ktlint = "14.2.0"
 ktlintEngine = "1.8.0"
 detekt = "1.23.8"
-jvm = "21"
 cobra = "0.1.0"
 
 [plugins]
