@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "edu.jhu.cobra"
-version = "0.1.0"
+version = libs.versions.projectVersion.get()
 
 val minJavaProperty = providers.gradleProperty("minJava").get()
 val minJava =
@@ -57,10 +57,6 @@ tasks.withType<JavaCompile>().configureEach {
     options.release.set(minJava)
 }
 
-publishing {
-    publications { create<MavenPublication>("maven") { from(components["java"]) } }
-}
-
 ktlint {
     version.set(libs.versions.ktlintEngine.get())
     verbose.set(true)
@@ -78,4 +74,10 @@ detekt {
     config.setFrom(files("${projectDir.parentFile}/config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     parallel = true
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") { from(components["java"]) }
+    }
 }
